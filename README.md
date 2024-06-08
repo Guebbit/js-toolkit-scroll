@@ -1,2 +1,2 @@
-# scroll-helpers
+# js-toolkit-scroll
 Personal scripts for UI UX friendly scrolls. For personal, volunteering and business projects.
