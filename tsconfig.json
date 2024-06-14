@@ -4,20 +4,31 @@
     "target": "es6",
     "module": "CommonJS",
     "moduleResolution": "node",
+    "skipLibCheck": true,
     "esModuleInterop": true,
-    "baseUrl": "src",
     "sourceMap": true,
-    "lib": [
-      "dom",
-      "esnext"
-    ],
+    "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
     "outDir": "./dist",
     "declaration": true,
     "declarationMap": true,
-    "declarationDir": "./types"
+    "declarationDir": "./types",
+    "baseUrl": "src",
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "types": [
+      "node",
+      "@types/jest"
+    ]
   },
-  "include": ["./src"]
+  "include": [
+    "./src"
+  ],
+  "exclude": [
+    "./node_modules"
+  ]
 }

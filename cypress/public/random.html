@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    body{
+      margin: 0;
+    }
+    #object-wrapper{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
+    }
+    #parallax-object{
+      position: relative;
+      overflow: hidden;
+      width: 800px;
+      height: 800px;
+      background: rgba(0,0,0,0.05);
+    }
+    #parallax-object > *{
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0;
+    }
+    #random-circle{
+      background: red;
+      z-index: 2;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+    }
+    #async-text-background{
+      background: blue;
+      opacity: 0.5;
+      z-index: 3;
+      width: 200px;
+      height: 50px;
+    }
+    #vertical-text,
+    #low-intensity-text,
+    #backward-text{
+      z-index: 4;
+      margin: 0;
+    }
+    #low-intensity-text{
+      color: white;
+    }
+    #vertical-text{
+      color: purple;
+    }
+    #center{
+      background: green;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+  <div id="object-wrapper">
+    <div id="parallax-object">
+      <img
+        src="images/sally.jpg"
+        style="max-height: 500px"
+        data-parallax-movement-intensity="20"
+        data-parallax-movement-speed="1000"
+      >
+
+      <img
+        src="images/cosace.jpg"
+        style="max-height: 200px"
+        data-parallax-movement-intensity="200"
+        data-parallax-movement-speed="500"
+      >
+
+      <div
+        id="async-text-background"
+        data-parallax-movement-intensity=-80"
+        data-parallax-movement-speed="100"
+      ></div>
+
+      <h1
+        id="backward-text"
+        data-parallax-movement-intensity="-80"
+        data-parallax-movement-speed="300"
+      >BACKWARD</h1>
+
+      <div
+        id="random-circle"
+        data-parallax-movement-intensity="100"
+        data-parallax-movement-speed="1000"
+      ></div>
+
+      <h1
+        id="vertical-text"
+        data-parallax-movement-intensity-x="0"
+      >VERTICAL ONLY</h1>
+
+      <h1
+        id="low-intensity-text"
+        data-parallax-movement-intensity="50"
+      >HORIZONTAL ONLY</h1>
+
+      <h1
+        data-parallax-movement-intensity-x="a"
+        data-parallax-movement-intensity-y="a"
+      >FOLLOW</h1>
+
+      <div
+        id="center"
+        data-parallax-movement-intensity=0"
+      ></div>
+    </div>
+  </div>
+</body>
+</html>
