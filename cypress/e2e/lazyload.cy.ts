@@ -2,7 +2,7 @@ import { intersectionHelper, lazyloadHelper, scripts } from '../../src';
 
 describe('Test images lazyloading TODO $window problem', () => {
   beforeEach(() => {
-    cy.visit('http://localhost:8000/lazyloadhelper.html')
+    cy.visit('http://localhost:8080/lazyloadhelper.html')
   });
 
   it('lazyload & activator TODO not work', () => {

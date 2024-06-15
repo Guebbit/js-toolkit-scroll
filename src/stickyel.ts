@@ -7,7 +7,16 @@ import { throttle } from 'lodash';
  * @param {string} className - className added in "stuck mode"
  * @param {window} $window - TODO REMOVE (cypress only)
  */
-export default (element :HTMLElement | null, className = 'stickyjs-active', $window :Window = window ) :void => {
+
+/**
+ * Emulate and extend "position: sticky"
+ *
+ * @param element
+ * @param className
+ * @param $window -
+ * @return event - to be later removed
+ */
+export default (element :HTMLElement | null, className = 'stickyel-active', $window :Window = window ) :void => {
   if(!element)
     return;
 
@@ -16,7 +25,7 @@ export default (element :HTMLElement | null, className = 'stickyjs-active', $win
   // needed to check when element is back in it's original position
   const { top :initialElementTop } = element.getBoundingClientRect();
 
-  $window.addEventListener('scroll', throttle(function() :void {
+  return window.addEventListener('scroll', throttle(function() :void {
     // distance from top of element (can't change when position:fixed)
     const { top :currentElementTop } = element.getBoundingClientRect();
 
@@ -28,7 +37,7 @@ export default (element :HTMLElement | null, className = 'stickyjs-active', $win
       element.classList.add(className);
     }
     // remove sticky mode: element is fixed on top and the initial scroll scroll position reached the window scroll
-    if(activeFlag && currentElementTop === 0 && initialElementTop > $window.scrollY){
+    if(activeFlag && currentElementTop === 0 && initialElementTop > window.scrollY){
       activeFlag = false;
       element.style.removeProperty('position');
       element.style.removeProperty('top');

@@ -1,1 +1,1 @@
-# mouse-parallax
+# js-toolkit-scroll

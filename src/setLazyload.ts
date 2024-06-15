@@ -1,4 +1,4 @@
-import formatNodeList from "./formatNodeList";
+import { formatNodeList } from "@guebbit/js-toolkit"
 
 /**
  * Set lazyload on <source> tag

@@ -58,12 +58,6 @@
         "filenames/match-regex": "off",
         "@typescript-eslint/naming-convention": "off"
       }
-    },
-    {
-      "files": ["tests/**/*"],
-      "env": {
-        "jest": true
-      }
     }
   ]
 }

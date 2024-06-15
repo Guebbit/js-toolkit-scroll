@@ -1,12 +1,10 @@
 import { throttle } from 'lodash';
 
 
-export interface stickyjsSettingsMap{
+export interface IShyelSettings{
   // how much go back on top (auto = element calculated height)
   // can be needed in special cases
   elementHeight? :number | string,
-  // scroll after which apply shy (hide) (example: 300px from top)
-  threshold? :number,
   // how much intensity of scroll does trigger the shy (hide) effect
   intensity? :number,
   // class that applies when stick to the top
@@ -17,14 +15,16 @@ export interface stickyjsSettingsMap{
 
 
 /**
- *  alternativa sempre valida a position: sticky, con distinzione modalità "sticky"
- *  sticky header che si mostra o nasconde in base allo scroll (transition: top non inclusa)
+ * Header (recommended)  that hide or show based on user scroll movements.
  *
- *  @param {HTMLElement} element - il fixed nav da spostare
- *  @param {Object} settings
- *  @param {Window} $window - TEMPORARY
- **/
-export default (element :HTMLElement | null, settings :stickyjsSettingsMap = {}, $window :Window = window ) :void => {
+ * @param element - the element that is gonna hide or show
+ * @param threshold - threshold activation for hiding. After how much we activate hide function
+ * @param settings - some settings to customize the stickyness
+ * @param $window
+ */
+export default (element :HTMLElement | null, threshold = 0, settings :IShyelSettings = {
+
+}, $window :Window = window ) :void => {
   if(!element) {
     console.warn("Element were not found");
     return;
@@ -33,9 +33,8 @@ export default (element :HTMLElement | null, settings :stickyjsSettingsMap = {},
   // settings
   const {
     elementHeight = 'auto',
-    threshold = 0,
     intensity = 0,
-    className = 'shyjs-active'
+    className = 'shyel-active'
   } = settings;
   // determine height if not specified (should never be specified)
   const hideTop = elementHeight === 'auto' ? element.offsetHeight + 1 : elementHeight as number;

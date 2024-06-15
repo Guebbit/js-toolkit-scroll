@@ -21,8 +21,7 @@
       "esnext"
     ],
     "types": [
-      "node",
-      "@types/jest"
+      "node"
     ]
   },
   "include": [

@@ -2,7 +2,7 @@ import {intersectionHelper} from '../../src';
 
 describe('Intersection, lazyload and addEvent', () => {
   beforeEach(() => {
-    cy.visit('http://localhost:8000/intersectionhelper.html')
+    cy.visit('http://localhost:8080/intersectionhelper.html')
   });
 
   it('Intersection TODO, non "vede" la window (patch cypress, remove $window need)', () => {
