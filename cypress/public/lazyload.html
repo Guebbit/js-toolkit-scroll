@@ -4,70 +4,78 @@
   <meta charset="UTF-8">
   <title>Title</title>
   <style>
-    img{
-      height: 1000px;
-      width: 1000px;
+    img, picture, video {
+      display: block;
+      width: 500px;
+      height: 500px;
+      margin-bottom: 200px;
     }
   </style>
 </head>
 <body>
+<div id="image-list">
   <img
-    src="http://placekitten.com/g/100/100"
-    data-src="https://placekitten.com/1400/1400"
+    src="https://loremflickr.com/100/100"
+    data-src="https://loremflickr.com/1000/1000"
   />
 
-  <br /><br /><br /><br /><br />
-  <br /><br /><br /><br /><br />
-  <br /><br /><br /><br /><br />
-  <br /><br /><br /><br /><br />
-
-  <picture>
-    <source
-      srcset="http://placekitten.com/g/100/100"
-      data-srcset="http://placekitten.com/1100/1100"
-      media="(min-width: 1200px)"
-    />
-    <source
-      srcset="http://placekitten.com/g/200/200"
-      data-srcset="http://placekitten.com/700/700"
-      media="(min-width: 801px)"
-    />
-    <source
-      srcset="http://placekitten.com/g/300/300"
-      data-srcset="http://placekitten.com/500/500"
-      media="(max-width: 800px)"
-    />
-    <img
-      src="http://placekitten.com/g/100/100"
-      data-src="http://placekitten.com/800/800"
-    />
-  </picture>
-
-  <br /><br /><br /><br /><br />
-  <br /><br /><br /><br /><br />
-  <br /><br /><br /><br /><br />
-  <br /><br /><br /><br /><br />
-
-  <video controls>
-    <source
-      data-src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm"
-      type="video/webm"
-    />
-    <source
-      data-src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
-      type="video/mp4"
-    />
-    Sorry, your browser doesn't support embedded videos.
-  </video>
-
-  <br /><br /><br /><br /><br />
-  <br /><br /><br /><br /><br />
-  <br /><br /><br /><br /><br />
-  <br /><br /><br /><br /><br />
+  <img
+    src="https://loremflickr.com/100/100"
+    data-src="https://loremflickr.com/1200/1200"
+  />
 
   <img
-    src="http://placekitten.com/g/100/100"
-    data-src="https://placekitten.com/1200/1200"
+    src="https://loremflickr.com/100/100"
+    data-src="https://loremflickr.com/1400/1400"
   />
+
+  <img
+    src="https://loremflickr.com/100/100"
+    data-src="https://loremflickr.com/1600/1600"
+  />
+</div>
+
+<picture>
+  <source
+    srcset="https://loremflickr.com/100/100"
+    data-srcset="https://loremflickr.com/600/600"
+    media="(min-width: 1200px)"
+  />
+  <source
+    srcset="https://loremflickr.com/100/100"
+    data-srcset="https://loremflickr.com/700/700"
+    media="(min-width: 601px)"
+  />
+  <source
+    srcset="https://loremflickr.com/100/100"
+    data-srcset="https://loremflickr.com/1000/1000"
+    media="(max-width: 600px)"
+  />
+  <img
+    src="https://loremflickr.com/100/100"
+    data-src="https://loremflickr.com/800/800"
+  />
+</picture>
+
+<video controls>
+  <source
+    data-src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm"
+    type="video/webm"
+  />
+  <source
+    data-src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    type="video/mp4"
+  />
+  Sorry, your browser doesn't support embedded videos.
+</video>
+
+<video controls data-src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">
+  Your browser does not support the video tag.
+</video>
+
+<img
+  src="https://loremflickr.com/100/100"
+  data-src="https://loremflickr.com/1200/1200"
+/>
 </body>
 </html>

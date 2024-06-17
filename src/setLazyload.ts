@@ -1,141 +1,132 @@
-import { formatNodeList } from "@guebbit/js-toolkit"
+import { setIntersection } from './index';
 
 /**
  * Set lazyload on <source> tag
  * Updates src and srcset to data-src and data-srcset, then remove the original attributes.
  * Tell me if changes were made
  * @param element
+ * @param prefix - data-src by default
  */
-export const setLazyloadAttributes = function (element: Element): boolean {
+export const setLazyAttributes = function (element: Element, prefix="data-"): boolean {
   let flag = false;
-  if (element.hasAttribute("data-src")) {
-    element.setAttribute("src", (element.getAttribute("data-src") as string));
-    element.removeAttribute("data-src");
+  if (element.hasAttribute(prefix + "src")) {
+    element.setAttribute("src", (element.getAttribute(prefix + "src") as string));
+    element.removeAttribute(prefix + "src");
     flag = true;
   }
-  if (element.hasAttribute("data-srcset")) {
-    element.setAttribute("srcset", (element.getAttribute("data-srcset") as string));
-    element.removeAttribute("data-srcset");
+  if (element.hasAttribute(prefix + "srcset")) {
+    element.setAttribute("srcset", (element.getAttribute(prefix + "srcset") as string));
+    element.removeAttribute(prefix + "srcset");
     flag = true;
   }
   return flag;
 }
 
 /**
- * Set lazyload to <video>
- * @param video
- */
-export const setLazyloadLoadVideo = async function (video: HTMLVideoElement): Promise<boolean> {
-  // Sfruttiamo il metodo race
-  return await Promise.race([
-    // Creiamo la prima promise, che si risolve
-    // in corrispondenza dell'evento video.canplaythrough
-    new Promise((resolve) => {
-      video.addEventListener('canplaythrough', () => {
-        // can play
-        resolve(true);
-      });
-    }),
-    // Creiamo la seconda promise, che si risolve
-    // dopo un tempo predefinito (2 secondi)
-    new Promise((resolve) => {
-      setTimeout(() => {
-        //video timedout
-        resolve(false);
-      }, 5000);
-    }),
-    //vediamo quale promise "ha fatto prima"
-  ]).then((play) => {
-    if (video.classList.contains('loaded'))
-      return true;
-    if (play) {
-      video.play();
-      video.classList.add('loaded');
-      return true;
-    }
-    // rimuovo i source (che non hanno caricato in tempo)
-    (Array.from(video.children) as HTMLElement[]).forEach((child: HTMLElement) => {
-      if (child.tagName === 'SOURCE' && typeof child.dataset['src'] !== 'undefined')
-        child.parentNode!.removeChild(child);
-      return true;
-    });
-    // Ricarico il video senza source, per resettarlo
-    video.load();
-    return false;
-  });
-}
-
-
-/**
  * Set lazyload to <video> tag and it's <source>s
+ *
  * @param video
+ * @param loadedClass
  */
-export const setLazyloadApplyToVideo = function (video: HTMLVideoElement): boolean {
+export const applyLazyVideo = function (video: HTMLVideoElement, loadedClass = 'loaded'): boolean {
   if (video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)
     return true;
-  if (window.matchMedia('(prefers-reduced-motion)').matches)
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
     return false;
-  const children = Array.from(video.children);
-  children.forEach(child => setLazyloadAttributes(child));
-  setLazyloadLoadVideo(video);
+  // apply to video...
+  setLazyAttributes(video);
+  video.onloadeddata = function () {
+    (this as HTMLVideoElement).classList.add(loadedClass);
+  };
+  // ...and to its sources
+  const sourceElements = video.getElementsByTagName("source");
+  for (let i = sourceElements.length; i--;)
+    setLazyAttributes(sourceElements[i]);
+  return true;
+}
+
+/**
+ * Set lazyload to <picture> tag and it's <source>s
+ * There could be an <img> fallback
+ *
+ * @param image
+ * @param loadedClass
+ */
+export const applyLazyPicture = function (image: HTMLPictureElement, loadedClass = 'loaded'): boolean {
+  setLazyAttributes(image);
+  image.onload = function () {
+    (this as HTMLPictureElement).classList.add(loadedClass);
+  };
+  // apply to sources
+  const sourceElements = image.querySelectorAll("source, img");
+  for (let i = sourceElements.length; i--;)
+    setLazyAttributes(sourceElements[i]);
   return true;
 }
 
 /**
  * Set lazyload to <img>
  * @param element
+ * @param loadedClass
  */
-export const setLazyloadApplyToImage = function (element: HTMLImageElement): boolean {
-  if (!setLazyloadAttributes(element))
+export const applyLazyImage = function (element: HTMLImageElement, loadedClass = 'loaded'): boolean {
+  if (!setLazyAttributes(element))
     return false;
   element.onload = function () {
-    (this as HTMLElement).classList.add('loaded');
+    (this as HTMLElement).classList.add(loadedClass);
   };
   return true;
 }
 
 /**
- * Set lazyload to <source> of <img>
- * @param element
+ * Setup lazyload in the selected elements
+ *
+ * @param elements
  */
-export const setLazyloadApplyToSource = function (element: HTMLSourceElement): boolean {
-  if (!setLazyloadAttributes(element))
-    return false;
-  try {
-    element!.parentNode!.querySelector("img")!.onload = function () {
-      (this as HTMLElement).classList.add('loaded');
-    };
-  } catch (e) {
-    // source has no img
-    return false;
-  }
-  return true;
-}
-
-/**
- * Set lazyload to targeted element
- * @param element
- */
-export default function (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null): void {
-  if (!element)
+const setLazyload = (elements: NodeListOf<Element> | Element[] | null) => {
+  if (!elements)
     return;
 
-  let i: number;
-  const elementsArray = formatNodeList(element);
-
-  for (i = elementsArray.length; i--;)
-    if (elementsArray[i])
-      switch (elementsArray[i]!.tagName) {
-        //se immagine
+  for (let i = elements.length; i--;)
+    if (elements[i])
+      switch (elements[i]!.tagName) {
         case "IMG":
-          setLazyloadApplyToImage(elementsArray[i] as HTMLImageElement);
+          applyLazyImage(elements[i] as HTMLImageElement);
           break;
-        case "SOURCE":
-          setLazyloadApplyToSource(elementsArray[i] as HTMLSourceElement);
+        // no need because PICTURE and VIDEO gets all
+        // case "SOURCE":
+        //   setLazyAttributes(elements[i] as HTMLSourceElement);
+        //   break;
+        // Inside PICTURE there can be a fallback IMG, but it's already taken care of
+        case "PICTURE":
+          applyLazyPicture(elements[i] as HTMLPictureElement);
           break;
-        //case "PICTURE": non serve, funziona con "source"
         case "VIDEO":
-          setLazyloadApplyToVideo(elementsArray[i] as HTMLVideoElement);
+          applyLazyVideo(elements[i] as HTMLVideoElement);
           break;
       }
 }
+
+/**
+ * Automatic lazyload apply
+ *
+ * @param elements
+ * @param forcedElements
+ */
+export const activateLazyload = (
+  elements = document.querySelectorAll('img:not(.lazyload-forced), video:not(.lazyload-forced), picture:not(.lazyload-forced)'),
+  forcedElements = document.querySelectorAll('.lazyload-forced'),
+) => {
+  // first all element that have to be forcibly lazyloaded
+  setLazyload(forcedElements);
+  // then the observer for the regular scroll-to-lazyload items
+  return setIntersection(elements,{
+    rootMargin: '500px 0px',	// load the image 500px before entering the viewport (0px on the Y axis)
+    single: true,				      // lazyload is one-hit so there is no need for the observer to keep watch
+    intersectingCallback: function(entry){
+      return setLazyload([entry]);
+    }
+  });
+};
+
+export default setLazyload;

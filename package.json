@@ -1,5 +1,5 @@
 {
-  "name": "@guebbit/mouse-parallax",
+  "name": "@guebbit/js-toolkit-scroll",
   "version": "1.0.0",
   "license": "AGPLv3.0",
   "sideEffects": false,
@@ -20,10 +20,10 @@
     "cy:serve": "http-server ./cypress/public/ -i -c-1 -d --cors -a localhost -p 8080",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "docs:dev": "vitepress dev --port 8080",
-    "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview",
-    "prepublish": "npm run build && npm run test && npm run cy:run && npm run lint && npm run docs:build",
+    "docs:dev": "vitepress dev docs --port 8080",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "prepublish": "npm run build && npm run test && npm run lint && npm run docs:build",
     "publish:public": "npm run prepublish && npm publish --access public"
   },
   "devDependencies": {

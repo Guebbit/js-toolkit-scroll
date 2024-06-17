@@ -1,8 +1,8 @@
 export interface IShyelSettings {
     elementHeight?: number | string;
     intensity?: number;
-    className?: string;
-    shyClassName?: string;
+    classShow?: string;
+    classHide?: string;
 }
 /**
  * Header (recommended)  that hide or show based on user scroll movements.
@@ -10,8 +10,9 @@ export interface IShyelSettings {
  * @param element - the element that is gonna hide or show
  * @param threshold - threshold activation for hiding. After how much we activate hide function
  * @param settings - some settings to customize the stickyness
- * @param $window
+ * @param $window - window instance that could be different from global window (like in cypress tests)
+ * @return function - call this function to call removeEventListener on this
  */
-declare const _default: (element: HTMLElement | null, threshold?: number, settings?: IShyelSettings, $window?: Window) => void;
+declare const _default: (element: HTMLElement | null, threshold?: number, settings?: IShyelSettings, $window?: Window) => () => void;
 export default _default;
 //# sourceMappingURL=shyel.d.ts.map

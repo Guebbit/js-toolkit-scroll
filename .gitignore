@@ -8,9 +8,12 @@
 .vitepress/dist
 .vitepress/cache
 
+#cypress
+cypress/screenshots/
+cypress/downloads/
+
 # npm run build
 dist/
-cache/
 
 # Finder's configuration files (Mac).
 .DS_Store

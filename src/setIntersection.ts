@@ -1,10 +1,31 @@
-import { formatNodeList } from "@guebbit/js-toolkit"
+import { debounce } from 'lodash';
 
 export interface IIntersectionSettings {
-  single?: boolean,
+  /**
+   * IntersectionObserver native
+   * It's the viewport that checks the visibility of the element.
+   * It's a "fixed" section that determine as "intersecting" the elements that enter in it.
+   * Default is entire viewport (as soon as the user see the element)
+   */
   root?: Element,
+  /**
+   * IntersectionObserver native
+   * Is like adding extra space around the root, can go beyond the viewport.
+   * It is needed to start checking visibility a bit before the element actually enters the root or a bit after it leaves.
+   * Useful if we want to lazyload images well before they appear on the user viewport.
+   */
   rootMargin?: string,
+  /**
+   * IntersectionObserver native
+   * It's the % of visibly element within the "fixed" section that is "root".
+   * 1 means trigger only when the entire element is completely visible.
+   * 0.5 means trigger when at least 50% is visible
+   * 0 means trigger as soon as any part of the element is visible.
+   */
   threshold?: number,
+  // single use, remove the observer when the intersection happen
+  single?: boolean,
+  // callbacks for when the intersection happen
   intersectingCallback?: (el: Element) => void,
   notIntersectingCallback?: (el: Element) => void
 }
@@ -12,11 +33,18 @@ export interface IIntersectionSettings {
 /**
  * IntersectionObserver helper, for better coding
  *
- * @param element - target element
+ *
+ * @param elements - target elements
  * @param settings
- * @param $window - window object, necessary in some cases (like E2E tests)
+ * @return observer element - to be later removed with:
+ *     for (i = elements.length; i--;)
+ *       if (elements[i])
+ *         observer.unobserve(elements[i]);
  */
-export default (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null, settings: IIntersectionSettings = {}, $window :Window = window): IntersectionObserver | false => {	//:NodeListOf<Element>
+const setIntersection = (elements: NodeListOf<Element> | null, settings: IIntersectionSettings = {}): IntersectionObserver | false => {
+  if(!elements)
+    return false;
+
   let i: number;
   const {
       single = false,
@@ -25,42 +53,100 @@ export default (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection
       threshold = 0,
       intersectingCallback,
       notIntersectingCallback
-    } = settings,
-    elementsArray = formatNodeList(element);
+    } = settings;
+
 
   //FALLBACK in case IntersectionObserver doesn't exist
-  if (!("IntersectionObserver" in $window)) {
-    for (i = elementsArray.length; i--;)
-      if (intersectingCallback && elementsArray[i])
-        intersectingCallback(elementsArray[i]!);
+  if (!("IntersectionObserver" in window)) {
+    for (i = elements.length; i--;)
+      if (intersectingCallback && elements[i])
+        intersectingCallback(elements[i]);
     return false;
   }
 
+  /**
+   * The observer that will be
+   */
   const observer: IntersectionObserver = new IntersectionObserver(
-    (entries: IntersectionObserverEntry[], self: IntersectionObserver) => {
+    debounce((entries: IntersectionObserverEntry[], self: IntersectionObserver) => {
       for (i = entries.length; i--;) {
         if (!entries[i])
           continue;
-        const {target, isIntersecting} = entries[i]!;
+        const { target, isIntersecting } = entries[i];
+        if(!target)
+          continue;
+
         if (isIntersecting) {
-          // Interrompo i monouso quando hanno successo la 1° volta
+          // if single time use: remove observer
           if (intersectingCallback && single)
             self.unobserve(target);
+          if(intersectingCallback)
+            intersectingCallback(target);
         } else {
-          //NON sta intersecando
+          // it isn't intersecting
           if (notIntersectingCallback)
             notIntersectingCallback(target);
         }
       }
-    }, {
+    }, 10), {
       root,
       rootMargin,
       threshold,
     });
 
-  for (i = elementsArray.length; i--;)
-    if (elementsArray[i])
-      observer.observe(elementsArray[i]!);
+  // add observer
+  for (i = elements.length; i--;)
+    if (elements[i])
+      observer.observe(elements[i]);
 
   return observer;
 };
+
+/**
+ *
+ * @param elements
+ * @param activeClass
+ * @param mobileOnlyClass
+ * @param threshold
+ */
+export const activateIntersection = (elements = document.querySelectorAll('.observer-activate'), activeClass = 'active', mobileOnlyClass = 'observer-mobile-only', threshold = 1) =>
+  setIntersection(elements, {
+    threshold,
+    intersectingCallback: function(entry) {
+      // mobile only
+      if (entry.classList.contains(mobileOnlyClass) && !window.matchMedia("(max-width: 600px)").matches)
+        return false;
+      // intersect
+      entry.classList.add(activeClass);
+      return true;
+    },
+    notIntersectingCallback: function(entry) {
+      // mobile only
+      if (entry.classList.contains(mobileOnlyClass) && !window.matchMedia("(max-width: 600px)").matches)
+        return false;
+      // intersection end
+      entry.classList.remove(activeClass);
+      return true;
+    }
+  });
+
+/**
+ *
+ * @param elements
+ * @param activeClass
+ * @param mobileOnlyClass
+ * @param threshold
+ */
+export const activateIntersectionOnce = (elements = document.querySelectorAll('.observer-activate-once'), activeClass = 'active', mobileOnlyClass = 'observer-mobile-only', threshold = 1) =>
+  setIntersection(elements, {
+    threshold,
+    intersectingCallback: function(entry) {
+      if (entry.classList.contains(mobileOnlyClass) && !window.matchMedia("(max-width: 600px)").matches)
+        return false;
+      entry.classList.add(activeClass);
+      return true;
+    },
+  });
+
+
+export default setIntersection;

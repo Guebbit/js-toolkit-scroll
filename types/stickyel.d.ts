@@ -1,18 +1,11 @@
 /**
- * Equivalent of position:sticky, but more secure and customizable (className as "stuck mode")
- *
- * @param {HTMLElement | null} element - element to render sticky
- * @param {string} className - className added in "stuck mode"
- * @param {window} $window - TODO REMOVE (cypress only)
- */
-/**
  * Emulate and extend "position: sticky"
  *
- * @param element
- * @param className
- * @param $window -
- * @return event - to be later removed
+ * @param element - element to render sticky
+ * @param className - class name added in "stuck mode"
+ * @param $window - window instance that could be different from global window (like in cypress tests)
+ * @return function - call this function to call removeEventListener on this
  */
-declare const _default: (element: HTMLElement | null, className?: string, $window?: Window) => void;
+declare const _default: (element: HTMLElement | null, className?: string, $window?: Window) => () => void;
 export default _default;
 //# sourceMappingURL=stickyel.d.ts.map

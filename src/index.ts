@@ -1,5 +1,29 @@
-import { default as scrollclass } from "./scrollclass";
-import { default as setIntersection } from "./setIntersection";
-import { default as setLazyload } from "./setLazyload";
-import { default as shyel, type IShyelSettings } from "./shyel";
-import { default as stickyel } from "./stickyel";
+export {
+  default as scrollClass,
+  type IScrollClassSettings
+} from "./scrollClass";
+
+export {
+  default as setIntersection,
+  type IIntersectionSettings,
+  activateIntersection,
+  activateIntersectionOnce,
+} from "./setIntersection";
+
+export {
+  default as setLazyload,
+  setLazyAttributes,
+  applyLazyVideo,
+  applyLazyPicture,
+  applyLazyImage,
+  activateLazyload,
+} from "./setLazyload";
+
+export {
+  default as shyel,
+  type IShyelSettings
+} from "./shyel";
+
+export {
+  default as stickyel
+} from "./stickyel";
