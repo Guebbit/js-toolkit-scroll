@@ -5,6 +5,8 @@ describe('Intersection, lazyload and addEvent', () => {
   beforeEach(() => {
     cy.visit('http://localhost:8080/observer.html')
     cy.scrollTo('top');
+    // wait that the first element is correctly lazyloaded
+    // eslint-disable-next-line cypress/no-unnecessary-waiting
     cy.wait(200);
   });
 
@@ -15,6 +17,7 @@ describe('Intersection, lazyload and addEvent', () => {
       .then(() => {
         cy.get('.target')
           .then($elements => {
+            // @ts-expect-error HTML typescript chaos. It still works anyway.
             setIntersection($elements.toArray(), {
               rootMargin: '-400px 0px',
               intersectingCallback: function (entry) {
@@ -63,6 +66,7 @@ describe('Intersection, lazyload and addEvent', () => {
 
         cy.get('.target')
           .then($elements => {
+            // @ts-expect-error HTML typescript chaos. It still works anyway.
             setIntersection($elements.toArray(), {
               root: $document.getElementById("scroll-area"),
               threshold: 1,
