@@ -41,4 +41,3 @@ declare const setLazyload: (elements: NodeListOf<Element> | Element[] | null) =>
  */
 export declare const activateLazyload: (elements?: NodeListOf<Element>, forcedElements?: NodeListOf<Element>) => false | IntersectionObserver;
 export default setLazyload;
-//# sourceMappingURL=setLazyload.d.ts.map

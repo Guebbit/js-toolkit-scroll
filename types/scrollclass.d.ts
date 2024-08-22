@@ -18,4 +18,3 @@ export interface IScrollClassSettings {
  */
 declare const _default: (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null, instructions: IScrollClassSettings[], $window?: Window) => () => void;
 export default _default;
-//# sourceMappingURL=scrollClass.d.ts.map

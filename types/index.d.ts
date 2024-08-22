@@ -3,4 +3,3 @@ export { default as setIntersection, type IIntersectionSettings, activateInterse
 export { default as setLazyload, setLazyAttributes, applyLazyVideo, applyLazyPicture, applyLazyImage, activateLazyload, } from "./setLazyload";
 export { default as shyel, type IShyelSettings } from "./shyel";
 export { default as stickyel } from "./stickyel";
-//# sourceMappingURL=index.d.ts.map

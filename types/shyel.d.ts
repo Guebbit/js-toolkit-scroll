@@ -15,4 +15,3 @@ export interface IShyelSettings {
  */
 declare const _default: (element: HTMLElement | null, threshold?: number, settings?: IShyelSettings, $window?: Window) => () => void;
 export default _default;
-//# sourceMappingURL=shyel.d.ts.map

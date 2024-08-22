@@ -54,4 +54,3 @@ export declare const activateIntersection: (elements?: NodeListOf<Element>, acti
  */
 export declare const activateIntersectionOnce: (elements?: NodeListOf<Element>, activeClass?: string, mobileOnlyClass?: string, threshold?: number) => false | IntersectionObserver;
 export default setIntersection;
-//# sourceMappingURL=setIntersection.d.ts.map

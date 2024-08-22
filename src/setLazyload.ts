@@ -38,6 +38,7 @@ export const applyLazyVideo = function (video: HTMLVideoElement, loadedClass = '
   video.onloadeddata = function () {
     (this as HTMLVideoElement).classList.add(loadedClass);
   };
+  video.load();
   // ...and to its sources
   const sourceElements = video.getElementsByTagName("source");
   for (let i = sourceElements.length; i--;)

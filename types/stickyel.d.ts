@@ -8,4 +8,3 @@
  */
 declare const _default: (element: HTMLElement | null, className?: string, $window?: Window) => () => void;
 export default _default;
-//# sourceMappingURL=stickyel.d.ts.map
