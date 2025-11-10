@@ -5,38 +5,39 @@ import { throttle } from 'lodash';
  *
  * @param element - element to render sticky
  * @param className - class name added in "stuck mode"
- * @param $window - window instance that could be different from global window (like in cypress tests)
  * @return function - call this function to call removeEventListener on this
  */
-export default (element :HTMLElement | null, className = 'stickyel-active', $window: Window = window)  => {
+export default (element :HTMLElement | null, className = 'stickyel-active'): () => void => {
   // element must be present
   if(!element)
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {};
 
-  // helper: lessen the weight to check element status
-  let activeFlag = false;
+  // Get the window instance from the element's owner document (required for cypress tests)
+  const $window = element.ownerDocument.defaultView ?? globalThis;
   // needed to check when element is back in its original position
-  const { top :initialElementTop } = element.getBoundingClientRect();
+  const initialTop = (element.getBoundingClientRect()).top + $window.scrollY;
+  // helper: lessen the weight to check element status
+  let isActive = false;
 
-  const handleScroll = throttle(function() :void {
-    // distance from top of element (can't change when position:fixed)
-    const { top :currentElementTop } = element.getBoundingClientRect();
+  // Throttle the scroll handler to improve performance
+  const handleScroll = throttle(() => {
+    const shouldStick = $window.scrollY >= initialTop;
 
     // active sticky mode: the element hit the "roof"
-    if(!activeFlag && currentElementTop < 10){
-      activeFlag = true;
+    if (shouldStick && !isActive) {
+      isActive = true;
       element.style.position = 'fixed';
-      element.style.top = '0px';
+      element.style.top = '0';
       element.classList.add(className);
-    }
-    // remove sticky mode: element is fixed on top and the initial scroll scroll position reached the window scroll
-    if(activeFlag && currentElementTop === 0 && initialElementTop > $window.scrollY){
-      activeFlag = false;
+      // remove sticky mode: element is fixed on top and the initial scroll position reached the window scroll
+    } else if (!shouldStick && isActive) {
+      isActive = false;
       element.style.removeProperty('position');
       element.style.removeProperty('top');
       element.classList.remove(className);
     }
-  }, 10);
+  }, 20, { leading: true });
 
   // add the event...
   $window.addEventListener('scroll', handleScroll);
