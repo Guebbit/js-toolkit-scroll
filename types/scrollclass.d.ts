@@ -14,7 +14,5 @@ export interface IScrollClassSettings {
  *
  * @param element - element where add\remove the classes
  * @param instructions - array of instructions
- * @param $window - window instance that could be different from global window (like in cypress tests)
  */
-declare const _default: (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null, instructions: IScrollClassSettings[], $window?: Window) => () => void;
-export default _default;
+export declare const scrollClass: (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null, instructions: IScrollClassSettings[]) => () => void;

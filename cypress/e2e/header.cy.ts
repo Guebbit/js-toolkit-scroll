@@ -11,7 +11,7 @@ describe('Test header manipulation', () => {
       .then($window => {
         cy.get('#header-test')
           .then($element => {
-            stickyel($element[0], 'stickyel-active', $window);
+            stickyel($element[0], 'stickyel-active');
           });
       });
 
@@ -28,7 +28,7 @@ describe('Test header manipulation', () => {
       .then($window => {
         cy.get('#header-test')
           .then($element => {
-            stickyel($element[0], 'i-am-sticky', $window);
+            stickyel($element[0], 'i-am-sticky');
           });
       });
 
@@ -49,7 +49,7 @@ describe('Test header manipulation', () => {
             $element[0].style.position = 'fixed';
             $element[0].style.top = '0px';
 
-            shyel($element[0], 0, {}, $window);
+            shyel($element[0], 0, {});
           });
       });
 
@@ -79,7 +79,7 @@ describe('Test header manipulation', () => {
               classShow: 'i-am-shown',
               classHide: 'i-am-hidden',
               intensity: 100
-            }, $window);
+            });
           });
       });
 
@@ -116,14 +116,14 @@ describe('Test header manipulation', () => {
         cy.get('#header-test')
           .then($element => {
             const { top } = $element[0].getBoundingClientRect();
-            stickyel($element[0], 'i-am-sticky', $window);
+            stickyel($element[0], 'i-am-sticky');
             // threshold needed because it could be awkward if not fixed already
             shyel($element[0], top + 200, {
               // elementHeight
               classShow: 'i-am-shown',
               classHide: 'i-am-hidden',
               intensity: 100,
-            }, $window);
+            });
 
             cy.get('#header-test')
               .should('not.have.class', 'i-am-hidden')

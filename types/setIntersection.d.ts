@@ -22,8 +22,8 @@ export interface IIntersectionSettings {
      */
     threshold?: number;
     single?: boolean;
-    intersectingCallback?: (el: Element) => void;
-    notIntersectingCallback?: (el: Element) => void;
+    intersectingCallback?: (element: Element) => void;
+    notIntersectingCallback?: (element: Element) => void;
 }
 /**
  * IntersectionObserver helper, for better coding
@@ -36,7 +36,7 @@ export interface IIntersectionSettings {
  *       if (elements[i])
  *         observer.unobserve(elements[i]);
  */
-declare const setIntersection: (elements: NodeListOf<Element> | null, settings?: IIntersectionSettings) => IntersectionObserver | false;
+export declare const setIntersection: (elements: NodeListOf<Element> | null, settings?: IIntersectionSettings) => IntersectionObserver | false;
 /**
  *
  * @param elements
@@ -53,4 +53,3 @@ export declare const activateIntersection: (elements?: NodeListOf<Element>, acti
  * @param threshold
  */
 export declare const activateIntersectionOnce: (elements?: NodeListOf<Element>, activeClass?: string, mobileOnlyClass?: string, threshold?: number) => false | IntersectionObserver;
-export default setIntersection;

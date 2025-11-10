@@ -22,12 +22,15 @@ export interface IScrollClassSettings {
  *
  * @param element - element where add\remove the classes
  * @param instructions - array of instructions
- * @param $window - window instance that could be different from global window (like in cypress tests)
  */
-export default (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null, instructions: IScrollClassSettings[], $window: Window = window): () => void => {
+export const scrollClass = (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null, instructions: IScrollClassSettings[]): () => void => {
   const elementsArray = formatNodeList(element);
-  if (elementsArray.length < 1)
+  // Get the window instance from the element's owner document (required for cypress tests)
+
+  if (elementsArray.length === 0)
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {};
+  const $window = elementsArray[0].ownerDocument.defaultView ?? globalThis;
 
   const handleScroll = throttle(function (): void {
     let i: number,
@@ -40,22 +43,14 @@ export default (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection
       for (i = instructions.length; i--; ) {
         if (!instructions[i])
           continue;
-        const { class: classs, scroll = 0, remove = false } = instructions[i]!;
+        const { class: classs, scroll = 0, remove = false } = instructions[i];
         // se remove non è specificato, allora è false
-        if (!remove) {
-          // add on scrolling, oltre una certa soglia aggiungo la classe
-          if ($window.scrollY > scroll) {
-            elementsArray[k]!.classList.add(classs);
-          } else {
-            elementsArray[k]!.classList.remove(classs);
-          }
-        } else {
+        if (remove) {
           // remove on scrolling, oltre una certa soglia rimuovo la classe
-          if ($window.scrollY > scroll) {
-            elementsArray[k]!.classList.remove(classs);
-          } else {
-            elementsArray[k]!.classList.add(classs);
-          }
+          elementsArray[k].classList.toggle(classs, !($window.scrollY > scroll));
+        } else {
+          // add on scrolling, oltre una certa soglia aggiungo la classe
+          elementsArray[k].classList.toggle(classs, $window.scrollY > scroll);
         }
       }
     }

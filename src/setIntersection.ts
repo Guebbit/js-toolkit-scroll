@@ -26,8 +26,8 @@ export interface IIntersectionSettings {
   // single use, remove the observer when the intersection happen
   single?: boolean,
   // callbacks for when the intersection happen
-  intersectingCallback?: (el: Element) => void,
-  notIntersectingCallback?: (el: Element) => void
+  intersectingCallback?: (element: Element) => void,
+  notIntersectingCallback?: (element: Element) => void
 }
 
 /**
@@ -41,14 +41,14 @@ export interface IIntersectionSettings {
  *       if (elements[i])
  *         observer.unobserve(elements[i]);
  */
-const setIntersection = (elements: NodeListOf<Element> | null, settings: IIntersectionSettings = {}): IntersectionObserver | false => {
+export const setIntersection = (elements: NodeListOf<Element> | null, settings: IIntersectionSettings = {}): IntersectionObserver | false => {
   if(!elements)
     return false;
 
   let i: number;
   const {
       single = false,
-      root = null,
+      root = undefined,
       rootMargin = "0px",
       threshold = 0,
       intersectingCallback,
@@ -57,8 +57,9 @@ const setIntersection = (elements: NodeListOf<Element> | null, settings: IInters
 
 
   //FALLBACK in case IntersectionObserver doesn't exist
-  if (!("IntersectionObserver" in window)) {
+  if (!("IntersectionObserver" in globalThis)) {
     for (i = elements.length; i--;)
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (intersectingCallback && elements[i])
         intersectingCallback(elements[i]);
     return false;
@@ -73,6 +74,7 @@ const setIntersection = (elements: NodeListOf<Element> | null, settings: IInters
         if (!entries[i])
           continue;
         const { target, isIntersecting } = entries[i];
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if(!target)
           continue;
 
@@ -96,6 +98,7 @@ const setIntersection = (elements: NodeListOf<Element> | null, settings: IInters
 
   // add observer
   for (i = elements.length; i--;)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (elements[i])
       observer.observe(elements[i]);
 
@@ -114,7 +117,7 @@ export const activateIntersection = (elements = document.querySelectorAll('.obse
     threshold,
     intersectingCallback: function(entry) {
       // mobile only
-      if (entry.classList.contains(mobileOnlyClass) && !window.matchMedia("(max-width: 600px)").matches)
+      if (entry.classList.contains(mobileOnlyClass) && !globalThis.matchMedia("(max-width: 600px)").matches)
         return false;
       // intersect
       entry.classList.add(activeClass);
@@ -122,7 +125,7 @@ export const activateIntersection = (elements = document.querySelectorAll('.obse
     },
     notIntersectingCallback: function(entry) {
       // mobile only
-      if (entry.classList.contains(mobileOnlyClass) && !window.matchMedia("(max-width: 600px)").matches)
+      if (entry.classList.contains(mobileOnlyClass) && !globalThis.matchMedia("(max-width: 600px)").matches)
         return false;
       // intersection end
       entry.classList.remove(activeClass);
@@ -141,12 +144,9 @@ export const activateIntersectionOnce = (elements = document.querySelectorAll('.
   setIntersection(elements, {
     threshold,
     intersectingCallback: function(entry) {
-      if (entry.classList.contains(mobileOnlyClass) && !window.matchMedia("(max-width: 600px)").matches)
+      if (entry.classList.contains(mobileOnlyClass) && !globalThis.matchMedia("(max-width: 600px)").matches)
         return false;
       entry.classList.add(activeClass);
       return true;
     },
   });
-
-
-export default setIntersection;

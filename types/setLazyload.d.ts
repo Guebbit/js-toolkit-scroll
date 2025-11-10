@@ -32,7 +32,7 @@ export declare const applyLazyImage: (element: HTMLImageElement, loadedClass?: s
  *
  * @param elements
  */
-declare const setLazyload: (elements: NodeListOf<Element> | Element[] | null) => void;
+export declare const setLazyload: (elements: NodeListOf<Element> | Element[] | null) => void;
 /**
  * Automatic lazyload apply
  *
@@ -40,4 +40,3 @@ declare const setLazyload: (elements: NodeListOf<Element> | Element[] | null) =>
  * @param forcedElements
  */
 export declare const activateLazyload: (elements?: NodeListOf<Element>, forcedElements?: NodeListOf<Element>) => false | IntersectionObserver;
-export default setLazyload;

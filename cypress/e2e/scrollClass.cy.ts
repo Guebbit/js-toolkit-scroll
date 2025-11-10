@@ -22,7 +22,7 @@ describe('Test scrollClass', () => {
                 scroll: 400,
                 remove: true
               }
-            ], $window)
+            ])
           });
       });
 

@@ -18,11 +18,11 @@ export interface IShyelSettings {
  * @param element - the element that is gonna hide or show
  * @param threshold - threshold activation for hiding. After how much we activate hide function
  * @param settings - some settings to customize the stickyness
- * @param $window - window instance that could be different from global window (like in cypress tests)
  * @return function - call this function to call removeEventListener on this
  */
-export default (element: HTMLElement | null, threshold = 0, settings: IShyelSettings = {}, $window: Window = window) :() => void => {
+export const shyel = (element: HTMLElement | null, threshold = 0, settings: IShyelSettings = {}) :() => void => {
   if (!element)
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {};
 
   // settings
@@ -33,6 +33,8 @@ export default (element: HTMLElement | null, threshold = 0, settings: IShyelSett
     classHide = 'shyel-hide',
   } = settings;
 
+  // Get the window instance from the element's owner document (required for cypress tests)
+  const $window = element.ownerDocument.defaultView ?? globalThis;
   // determine height if not specified (should never be specified)
   const hideTop = elementHeight === 'auto' ? element.offsetHeight + 1 : elementHeight as number;
   // record last scroll position, to determine the direction of the next, and to check intensity

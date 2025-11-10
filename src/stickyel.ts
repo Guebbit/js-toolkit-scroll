@@ -7,7 +7,7 @@ import { throttle } from 'lodash';
  * @param className - class name added in "stuck mode"
  * @return function - call this function to call removeEventListener on this
  */
-export default (element :HTMLElement | null, className = 'stickyel-active'): () => void => {
+export const stickyel = (element :HTMLElement | null, className = 'stickyel-active'): () => void => {
   // element must be present
   if(!element)
     // eslint-disable-next-line @typescript-eslint/no-empty-function

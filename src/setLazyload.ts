@@ -7,20 +7,20 @@ import { setIntersection } from './index';
  * @param element
  * @param prefix - data-src by default
  */
-export const setLazyAttributes = function (element: Element, prefix="data-"): boolean {
+export const setLazyAttributes = function(element: Element, prefix = 'data-'): boolean {
   let flag = false;
-  if (element.hasAttribute(prefix + "src")) {
-    element.setAttribute("src", (element.getAttribute(prefix + "src") as string));
-    element.removeAttribute(prefix + "src");
+  if (element.hasAttribute(prefix + 'src')) {
+    element.setAttribute('src', (element.getAttribute(prefix + 'src')!));
+    element.removeAttribute(prefix + 'src');
     flag = true;
   }
-  if (element.hasAttribute(prefix + "srcset")) {
-    element.setAttribute("srcset", (element.getAttribute(prefix + "srcset") as string));
-    element.removeAttribute(prefix + "srcset");
+  if (element.hasAttribute(prefix + 'srcset')) {
+    element.setAttribute('srcset', (element.getAttribute(prefix + 'srcset')!));
+    element.removeAttribute(prefix + 'srcset');
     flag = true;
   }
   return flag;
-}
+};
 
 /**
  * Set lazyload to <video> tag and it's <source>s
@@ -28,23 +28,23 @@ export const setLazyAttributes = function (element: Element, prefix="data-"): bo
  * @param video
  * @param loadedClass
  */
-export const applyLazyVideo = function (video: HTMLVideoElement, loadedClass = 'loaded'): boolean {
+export const applyLazyVideo = function(video: HTMLVideoElement, loadedClass = 'loaded'): boolean {
   if (video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)
     return true;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  if (globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches)
     return false;
   // apply to video...
   setLazyAttributes(video);
-  video.onloadeddata = function () {
-    (this as HTMLVideoElement).classList.add(loadedClass);
-  };
+  video.addEventListener('loadeddata', function() {
+    (this).classList.add(loadedClass);
+  });
   video.load();
   // ...and to its sources
-  const sourceElements = video.getElementsByTagName("source");
+  const sourceElements = video.querySelectorAll('source');
   for (let i = sourceElements.length; i--;)
     setLazyAttributes(sourceElements[i]);
   return true;
-}
+};
 
 /**
  * Set lazyload to <picture> tag and it's <source>s
@@ -53,60 +53,63 @@ export const applyLazyVideo = function (video: HTMLVideoElement, loadedClass = '
  * @param image
  * @param loadedClass
  */
-export const applyLazyPicture = function (image: HTMLPictureElement, loadedClass = 'loaded'): boolean {
+export const applyLazyPicture = function(image: HTMLPictureElement, loadedClass = 'loaded'): boolean {
   setLazyAttributes(image);
-  image.onload = function () {
-    (this as HTMLPictureElement).classList.add(loadedClass);
-  };
+  image.addEventListener('load', function() {
+    (this).classList.add(loadedClass);
+  });
   // apply to sources
-  const sourceElements = image.querySelectorAll("source, img");
+  const sourceElements = image.querySelectorAll('source, img');
   for (let i = sourceElements.length; i--;)
     setLazyAttributes(sourceElements[i]);
   return true;
-}
+};
 
 /**
  * Set lazyload to <img>
  * @param element
  * @param loadedClass
  */
-export const applyLazyImage = function (element: HTMLImageElement, loadedClass = 'loaded'): boolean {
+export const applyLazyImage = function(element: HTMLImageElement, loadedClass = 'loaded'): boolean {
   if (!setLazyAttributes(element))
     return false;
-  element.onload = function () {
+  element.addEventListener('load', function() {
     (this as HTMLElement).classList.add(loadedClass);
-  };
+  });
   return true;
-}
+};
 
 /**
  * Setup lazyload in the selected elements
  *
  * @param elements
  */
-const setLazyload = (elements: NodeListOf<Element> | Element[] | null) => {
+export const setLazyload = (elements: NodeListOf<Element> | Element[] | null) => {
   if (!elements)
     return;
 
   for (let i = elements.length; i--;)
     if (elements[i])
-      switch (elements[i]!.tagName) {
-        case "IMG":
+      switch (elements[i].tagName) {
+        case 'IMG': {
           applyLazyImage(elements[i] as HTMLImageElement);
           break;
+        }
         // no need because PICTURE and VIDEO gets all
         // case "SOURCE":
         //   setLazyAttributes(elements[i] as HTMLSourceElement);
         //   break;
         // Inside PICTURE there can be a fallback IMG, but it's already taken care of
-        case "PICTURE":
+        case 'PICTURE': {
           applyLazyPicture(elements[i] as HTMLPictureElement);
           break;
-        case "VIDEO":
+        }
+        case 'VIDEO': {
           applyLazyVideo(elements[i] as HTMLVideoElement);
           break;
+        }
       }
-}
+};
 
 /**
  * Automatic lazyload apply
@@ -116,18 +119,16 @@ const setLazyload = (elements: NodeListOf<Element> | Element[] | null) => {
  */
 export const activateLazyload = (
   elements = document.querySelectorAll('img:not(.lazyload-forced), video:not(.lazyload-forced), picture:not(.lazyload-forced)'),
-  forcedElements = document.querySelectorAll('.lazyload-forced'),
+  forcedElements = document.querySelectorAll('.lazyload-forced')
 ) => {
   // first all element that have to be forcibly lazyloaded
   setLazyload(forcedElements);
   // then the observer for the regular scroll-to-lazyload items
-  return setIntersection(elements,{
+  return setIntersection(elements, {
     rootMargin: '500px 0px',	// load the image 500px before entering the viewport (0px on the Y axis)
     single: true,				      // lazyload is one-hit so there is no need for the observer to keep watch
-    intersectingCallback: function(entry){
-      return setLazyload([entry]);
+    intersectingCallback: function(entry: Element) {
+      setLazyload([entry]);
     }
   });
 };
-
-export default setLazyload;

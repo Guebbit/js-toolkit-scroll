@@ -1,7 +1,6 @@
 import eslint from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import html from 'eslint-plugin-html'
 import eslintPluginUnicorn from 'eslint-plugin-unicorn'
 
 export default tseslint.config(
@@ -10,6 +9,8 @@ export default tseslint.config(
       'dist',
       'node_modules',
       'eslint.config.mjs',
+      'cypress',
+      'docs',
     ]
   },
 
@@ -55,7 +56,6 @@ export default tseslint.config(
    */
   {
     plugins: {
-      html,
       // unicorn: eslintPluginUnicorn
     },
 
@@ -71,10 +71,6 @@ export default tseslint.config(
       'no-console': 'error',
       'no-debugger': 'warn',
       'no-nested-ternary': 'off',
-      'vue/script-indent': 'off',
-      'vue/multi-word-component-names': 'off',
-      'vue/require-default-prop': 'off',
-      'vue/no-v-html': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       // '@typescript-eslint/no-confusing-void-expression': 'off',
       '@typescript-eslint/use-unknown-in-catch-callback-variable': 'off',

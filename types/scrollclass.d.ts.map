@@ -1,1 +1,0 @@
-{"version":3,"file":"scrollClass.d.ts","sourceRoot":"","sources":["../src/scrollClass.ts"],"names":[],"mappings":"AAGA,MAAM,WAAW,oBAAoB;IAEnC,KAAK,EAAE,MAAM,CAAC;IAEd,MAAM,EAAE,MAAM,CAAC;IAEf,MAAM,CAAC,EAAE,OAAO,CAAC;CAClB;AAED;;;;;GAKG;AAEH;;;;;;GAMG;kCACsB,WAAW,GAAG,WAAW,EAAE,GAAG,QAAQ,GAAG,cAAc,GAAG,IAAI,gBAAgB,oBAAoB,EAAE,YAAW,MAAM,KAAY,MAAM,IAAI;AAApK,wBA2CE"}

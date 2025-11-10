@@ -1,17 +1,17 @@
 export {
-  default as scrollClass,
+  scrollClass,
   type IScrollClassSettings
 } from "./scrollClass";
 
 export {
-  default as setIntersection,
+  setIntersection,
   type IIntersectionSettings,
   activateIntersection,
   activateIntersectionOnce,
 } from "./setIntersection";
 
 export {
-  default as setLazyload,
+  setLazyload,
   setLazyAttributes,
   applyLazyVideo,
   applyLazyPicture,
@@ -20,10 +20,10 @@ export {
 } from "./setLazyload";
 
 export {
-  default as shyel,
+  shyel,
   type IShyelSettings
 } from "./shyel";
 
 export {
-  default as stickyel
+  stickyel
 } from "./stickyel";
