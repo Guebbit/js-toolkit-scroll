@@ -1,6 +1,6 @@
 {
   "name": "@guebbit/js-toolkit-scroll",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "AGPLv3.0",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Use cy:serve then cy:run\"",
+    "test": "npm run cy:run",
     "lint": "eslint \"*/**/*.{ts,js,json}\"",
     "lint:fix": "eslint \"*/**/*.{ts,js,json}\" --fix",
     "cy:serve": "http-server ./cypress/public/ -i -c-1 -d --cors -a localhost -p 8080",

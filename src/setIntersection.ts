@@ -41,7 +41,7 @@ export interface IIntersectionSettings {
  *       if (elements[i])
  *         observer.unobserve(elements[i]);
  */
-export const setIntersection = (elements: NodeListOf<Element> | null, settings: IIntersectionSettings = {}): IntersectionObserver | false => {
+export const setIntersection = (elements: NodeListOf<Element> | Element[] | null, settings: IIntersectionSettings = {}): IntersectionObserver | false => {
   if(!elements)
     return false;
 
