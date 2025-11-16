@@ -59,7 +59,6 @@ export const setIntersection = (elements: NodeListOf<Element> | Element[] | null
   //FALLBACK in case IntersectionObserver doesn't exist
   if (!("IntersectionObserver" in globalThis)) {
     for (i = elements.length; i--;)
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (intersectingCallback && elements[i])
         intersectingCallback(elements[i]);
     return false;
@@ -98,7 +97,6 @@ export const setIntersection = (elements: NodeListOf<Element> | Element[] | null
 
   // add observer
   for (i = elements.length; i--;)
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (elements[i])
       observer.observe(elements[i]);
 

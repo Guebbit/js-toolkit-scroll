@@ -45,7 +45,8 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        // projectService: true, this would create problems with tests, better to use a specific tsconfig
+        project: ['./tsconfig.eslint.json'],
         tsconfigRootDir: import.meta.dirname
       }
     }

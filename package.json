@@ -1,6 +1,6 @@
 {
   "name": "@guebbit/js-toolkit-scroll",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "license": "AGPLv3.0",
   "sideEffects": false,
   "main": "dist/index.js",
