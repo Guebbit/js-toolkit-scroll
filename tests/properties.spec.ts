@@ -21,9 +21,8 @@ const instructionArb = fc.record({
 });
 
 /**
- * Instructions are keyed by class name. Two instructions naming the same class
- * are a contradiction the caller has to resolve, not a contract this library
- * can be held to.
+ * Instructions are keyed by class name. Two naming the same class contradict
+ * each other, which is the caller's problem, not a contract to test.
  */
 const instructionsArb = fc.uniqueArray(instructionArb, {
   minLength: 1,
@@ -36,9 +35,8 @@ const scrollPositionArb = fc.nat({ max: 4000 });
 const settle = () => vi.advanceTimersByTime(200);
 
 /**
- * Each property run is a fresh page. Without this the scroll position left by
- * the previous run is still in place when the next one measures its element,
- * which offsets every resting position it computes.
+ * Each run gets a fresh page: a scroll position left behind by the previous
+ * run offsets every resting position the next one measures.
  */
 const freshPage = () => {
   document.body.innerHTML = '';
@@ -58,9 +56,8 @@ describe('setLazyAttributes properties', () => {
   });
 
   /**
-   * The whole job is to move a value from one attribute to another without
-   * altering it. Any normalisation on the way through would silently rewrite
-   * URLs — a query string or an encoded character would come out different.
+   * The whole job is moving a value between attributes untouched. Any
+   * normalisation would rewrite URLs — query strings, encoded characters.
    */
   it('carries the placeholder value through unchanged', () => {
     fc.assert(
@@ -89,9 +86,8 @@ describe('setLazyAttributes properties', () => {
   });
 
   /**
-   * Elements get re-processed whenever they are re-observed. The first pass is
-   * the only one that may change anything; every later pass has to be inert or
-   * a re-entering element would wipe the src the first pass just set.
+   * Elements are re-processed whenever they are re-observed, so only the first
+   * pass may change anything: a later one would wipe the src it just set.
    */
   it('reaches a fixed point after one pass', () => {
     fc.assert(
@@ -110,8 +106,8 @@ describe('setLazyAttributes properties', () => {
   });
 
   /**
-   * The return value is what applyLazyImage uses to decide whether to bother
-   * attaching a load listener, so it has to mean exactly "the DOM changed".
+   * applyLazyImage decides whether to attach a load listener from this, so it
+   * has to mean exactly "the DOM changed".
    */
   it('returns true exactly when it changed something', () => {
     fc.assert(
@@ -130,9 +126,8 @@ describe('setLazyAttributes properties', () => {
   });
 
   /**
-   * A prefix comes from caller configuration and is not validated anywhere.
-   * An unusual one must simply find nothing, never throw into the caller's
-   * scroll handler.
+   * The prefix is caller configuration and is validated nowhere. An unusual one
+   * must simply find nothing, never throw into the caller's scroll handler.
    */
   it('never throws, whatever the prefix', () => {
     fc.assert(
@@ -155,8 +150,8 @@ describe('setLazyload properties', () => {
   const inertTags = ['div', 'span', 'a', 'source', 'p'] as const;
 
   /**
-   * Dispatch is by tag name. A data-src on anything else belongs to some other
-   * script; promoting it to src would corrupt that script's state.
+   * Dispatch is by tag name: a data-src elsewhere is some other script's state,
+   * and promoting it would corrupt it.
    */
   it('never touches an element whose tag it does not handle', () => {
     fc.assert(
@@ -172,9 +167,9 @@ describe('setLazyload properties', () => {
   });
 
   /**
-   * Callers pass whatever querySelectorAll returned. Processing the batch has
-   * to be the same as processing each element on its own, otherwise the result
-   * depends on how the caller happened to group its selectors.
+   * Callers pass whatever querySelectorAll returned, so a batch has to behave
+   * like its elements one at a time — otherwise the result depends on how the
+   * caller happened to group its selectors.
    */
   it('treats a batch exactly like the same elements one at a time', () => {
     fc.assert(
@@ -228,9 +223,8 @@ describe('scrollClass properties', () => {
   });
 
   /**
-   * The state is a function of where the page is now, not of how it got there.
-   * A path-dependent result would mean a class latched on during a fast scroll
-   * and never cleared.
+   * The state is a function of where the page is, not how it got there. A
+   * path-dependent result means a class latched on and never cleared.
    */
   it('lands in the same state regardless of the route taken', () => {
     fc.assert(
@@ -251,8 +245,8 @@ describe('scrollClass properties', () => {
               scrollTo(y);
               settle();
             }
-            // `direct` was attached before the walk, so re-settling at the
-            // destination is enough for it to see only the final position.
+            // `direct` was attached before the walk, so one settle at the
+            // destination is all it ever sees.
             scrollTo(destination);
             settle();
 
@@ -279,9 +273,8 @@ describe('stickyel properties', () => {
   });
 
   /**
-   * The class exists so CSS can react to the pinned state. If the class and the
-   * inline `position: fixed` can ever disagree, that CSS styles an element that
-   * is not actually pinned.
+   * The class exists so CSS can react to the pinned state. Let it disagree with
+   * the inline `position: fixed` and that CSS styles an unpinned element.
    */
   it('keeps the class and the pinned layout in agreement', () => {
     fc.assert(
@@ -352,9 +345,8 @@ describe('shyel properties', () => {
   });
 
   /**
-   * Show and hide are opposites. Both classes at once leaves the outcome to
-   * whichever CSS rule happens to win the cascade, which the caller cannot
-   * control or predict.
+   * Show and hide are opposites. Both at once leaves the outcome to whichever
+   * CSS rule wins the cascade, which the caller cannot predict.
    */
   it('never leaves both classes on the element', () => {
     fc.assert(
@@ -383,9 +375,8 @@ describe('shyel properties', () => {
   });
 
   /**
-   * The inline offset is the visual half of the hidden state. If it can be left
-   * behind while the class is gone, the header stays pushed off screen with
-   * nothing in the DOM to explain why.
+   * The inline offset is the visual half of the hidden state. Left behind
+   * without the class, the header stays off screen with nothing to explain why.
    */
   it('keeps the offset and the hide class in agreement', () => {
     fc.assert(
@@ -413,8 +404,8 @@ describe('shyel properties', () => {
   });
 
   /**
-   * Below the threshold the header is unconditionally visible: that is what the
-   * threshold means. No amount of scroll history may leave it hidden there.
+   * Below the threshold the header is unconditionally visible — that is what
+   * the threshold means. No scroll history may leave it hidden there.
    */
   it('always shows the header below the threshold', () => {
     fc.assert(
@@ -446,8 +437,7 @@ describe('shyel properties', () => {
 
   /**
    * The top of the page is deliberately inert: momentum scrolling and browser
-   * chrome resizing produce phantom movement there, and reacting to it makes
-   * the header flicker on every touch.
+   * chrome resizing fake movement there, which would flicker the header.
    */
   it('does nothing at all in the first 10px', () => {
     fc.assert(

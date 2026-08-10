@@ -3,11 +3,9 @@ import { vi } from 'vitest';
 /**
  * A controllable stand-in for the browser's IntersectionObserver.
  *
- * jsdom ships no IntersectionObserver at all, so without this the library's
- * "no IntersectionObserver" fallback branch is the only branch a test can ever
- * reach. Recording observe/unobserve and exposing `emit` also lets a test
- * deliver entries at an exact moment, which is the only way to pin down
- * ordering behaviour that a real browser decides on its own schedule.
+ * jsdom ships none, so without this the fallback branch is the only one a test
+ * can reach. `emit` also delivers entries at an exact moment, which is the only
+ * way to pin down ordering a real browser schedules on its own.
  */
 export class FakeIntersectionObserver implements IntersectionObserver {
   static instances: FakeIntersectionObserver[] = [];
@@ -86,9 +84,8 @@ export const lastObserver = (): FakeIntersectionObserver => {
 
 /**
  * Run `body` in a world where IntersectionObserver does not exist.
- * `vi.stubGlobal(name, undefined)` leaves the key in place, and the library
- * branches on `"IntersectionObserver" in globalThis`, so the key itself has to
- * go for the fallback path to be reachable.
+ * The library branches on `"IntersectionObserver" in globalThis` and
+ * `vi.stubGlobal(name, undefined)` leaves the key in place, so it has to go.
  */
 export const withoutIntersectionObserver = <T>(body: () => T): T => {
   const had = 'IntersectionObserver' in globalThis;
@@ -117,9 +114,8 @@ export const stubMatchMedia = (matches: boolean | ((query: string) => boolean)):
 };
 
 /**
- * Move the window and fire the scroll event.
- * jsdom pins scrollY at 0 and does not implement scrolling, so the value has to
- * be written directly; the library reads `$window.scrollY` inside its handler.
+ * Move the window and fire the scroll event. jsdom pins scrollY at 0 and does
+ * not scroll, so the value the handler reads has to be written directly.
  */
 export const scrollTo = (y: number, target: Window = globalThis.window): void => {
   Object.defineProperty(target, 'scrollY', { value: y, configurable: true, writable: true });
@@ -132,10 +128,30 @@ export const setOffsetHeight = (element: HTMLElement, height: number): void => {
   Object.defineProperty(element, 'offsetHeight', { value: height, configurable: true });
 };
 
-/** jsdom reports every layout box as zero; `stickyel` reads getBoundingClientRect().top. */
+/**
+ * jsdom reports every layout box as zero; `stickyel` reads
+ * getBoundingClientRect().top.
+ *
+ * A pinned element reports where it was moved to, not where it came from, so
+ * the stub answers from the inline offset once `position: fixed` is set. That
+ * is what makes "measure while still in flow" an observable requirement rather
+ * than an invisible one.
+ */
 export const setRectTop = (element: HTMLElement, top: number): void => {
-  element.getBoundingClientRect = () =>
-    ({ top, bottom: top, left: 0, right: 0, width: 0, height: 0, x: 0, y: top }) as DOMRect;
+  element.getBoundingClientRect = () => {
+    const reported =
+      element.style.position === 'fixed' ? Number.parseFloat(element.style.top || '0') : top;
+    return {
+      top: reported,
+      bottom: reported,
+      left: 0,
+      right: 0,
+      width: 0,
+      height: 0,
+      x: 0,
+      y: reported,
+    } as DOMRect;
+  };
 };
 
 /** Count of listeners currently registered for `type`, to prove teardown detaches. */
@@ -158,12 +174,9 @@ let mountCount = 0;
 
 /**
  * Build an element tree from HTML and attach it, so ownerDocument.defaultView
- * is real.
- *
- * Every element gets a unique id when the markup does not supply one. vitest
- * compares DOM nodes structurally, so without it two bare `<div>`s satisfy any
- * assertion about either one and a test that reports the wrong element still
- * passes.
+ * is real. Each element gets a unique id: vitest compares DOM nodes
+ * structurally, so without one two bare `<div>`s satisfy any assertion about
+ * either, and a test reporting the wrong element still passes.
  */
 export const mount = <T extends Element = HTMLElement>(html: string): T => {
   const host = document.createElement('div');
@@ -176,9 +189,8 @@ export const mount = <T extends Element = HTMLElement>(html: string): T => {
 };
 
 /**
- * The first argument of every call a spy received.
- * Assert against this with `toContain`, which compares by reference, rather
- * than `toHaveBeenCalledWith`, which compares DOM nodes structurally.
+ * The first argument of every call a spy received. Assert with `toContain`
+ * (by reference) rather than `toHaveBeenCalledWith` (structural).
  */
 export const firstArgs = <T>(spy: { mock: { calls: unknown[][] } }): T[] =>
   spy.mock.calls.map((call) => call[0] as T);

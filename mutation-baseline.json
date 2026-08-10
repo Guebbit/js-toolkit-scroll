@@ -1,5 +1,9 @@
 {
   "files": {
+    "src/onFrame.ts": {
+      "score": 88.89,
+      "mutants": 9
+    },
     "src/scrollClass.ts": {
       "score": 100,
       "mutants": 41
@@ -13,12 +17,12 @@
       "mutants": 92
     },
     "src/shyel.ts": {
-      "score": 96,
-      "mutants": 50
+      "score": 96.77,
+      "mutants": 62
     },
     "src/stickyel.ts": {
-      "score": 97.06,
-      "mutants": 34
+      "score": 97.37,
+      "mutants": 38
     }
   },
   "//": "Per-file mutation score floors, written by scripts/mutationBaseline.mjs. A file may only ever be recorded higher; a drop fails the check instead."

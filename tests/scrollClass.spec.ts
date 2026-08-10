@@ -223,6 +223,40 @@ describe('scrollClass', () => {
     expect(() => scrollClass(element, [{ class: 'on', scroll: 10 }])).not.toThrow();
   });
 
+  /**
+   * Removing the listener is not enough: a run already queued for the next
+   * frame still touches elements the caller has finished with.
+   */
+  it('drops a queued run on teardown', () => {
+    const element = mount('<div></div>');
+    const teardown = scrollClass(element, [{ class: 'on', scroll: 100 }]);
+
+    scrollTo(300);   // queues a run for the next frame
+    teardown();
+    vi.advanceTimersByTime(50);
+
+    expect(element.classList.contains('on')).toBe(false);
+  });
+
+  it('uses a caller-supplied wrapper instead of the default', () => {
+    const element = mount('<div></div>');
+    scrollClass(element, [{ class: 'on', scroll: 100 }], { wrap: (handler) => handler });
+
+    // an identity wrapper runs the handler on the event itself
+    scrollTo(300);
+
+    expect(element.classList.contains('on')).toBe(true);
+  });
+
+  it('tears down cleanly when the wrapper offers no cancel', () => {
+    const element = mount('<div></div>');
+    const teardown = scrollClass(element, [{ class: 'on', scroll: 10 }], {
+      wrap: (handler) => handler,
+    });
+
+    expect(() => teardown()).not.toThrow();
+  });
+
   it('preserves classes it was not asked about', () => {
     const element = mount('<div class="keep"></div>');
     scrollClass(element, [{ class: 'on', scroll: 100 }]);

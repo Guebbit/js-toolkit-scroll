@@ -33,6 +33,7 @@ const EXPECTED_EXPORTS = [
   'activateLazyload',
   'shyel',
   'stickyel',
+  'onFrame',
 ];
 
 const run = (command, parameters, cwd) =>

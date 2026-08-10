@@ -1,5 +1,6 @@
-import { throttle } from "lodash";
 import { formatNodeList } from "@guebbit/js-toolkit"
+
+import { type IScrollOptions, onFrame } from './onFrame';
 
 export interface IScrollClassSettings {
   // class name
@@ -22,12 +23,12 @@ export interface IScrollClassSettings {
  *
  * @param element - element where add\remove the classes
  * @param instructions - array of instructions
+ * @param settings - rate-limit strategy for the scroll handler
  */
-export const scrollClass = (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null, instructions: IScrollClassSettings[]): () => void => {
-  // formatNodeList understands NodeList and arrays, but an HTMLCollection is
-  // neither, so it would wrap the collection itself as a single "element".
-  // The typeof guard keeps the call safe where there is no DOM at all, which is
-  // how a server-side render reaches this line.
+export const scrollClass = (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null, instructions: IScrollClassSettings[], settings: IScrollOptions = {}): () => void => {
+  // formatNodeList knows NodeList and arrays; an HTMLCollection is neither, so
+  // it would wrap the whole collection as a single "element". The typeof guard
+  // is for the no-DOM case, which is how an SSR render reaches this line.
   const elementsArray = formatNodeList(
     typeof HTMLCollection !== 'undefined' && element instanceof HTMLCollection
       ? ([...element] as HTMLElement[])
@@ -39,8 +40,9 @@ export const scrollClass = (element: HTMLElement | HTMLElement[] | NodeList | HT
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {};
   const $window = elementsArray[0].ownerDocument.defaultView ?? globalThis;
+  const { wrap = onFrame } = settings;
 
-  const handleScroll = throttle(function (): void {
+  const handleScroll = wrap(function (): void {
     let i: number,
       k: number;
     // per ogni elemento
@@ -62,12 +64,15 @@ export const scrollClass = (element: HTMLElement | HTMLElement[] | NodeList | HT
         }
       }
     }
-  }, 50);
+  });
 
   $window.addEventListener('scroll', handleScroll);
 
   // Return a function to remove the event listener
   return () => {
     $window.removeEventListener('scroll', handleScroll);
+    // A run queued but not yet made would otherwise still touch elements the
+    // caller has already finished with.
+    handleScroll.cancel?.();
   };
 };

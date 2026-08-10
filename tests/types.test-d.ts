@@ -9,7 +9,11 @@ import {
   applyLazyVideo,
   type IIntersectionSettings,
   type IScrollClassSettings,
+  type IScrollHandlerWrapper,
+  type IScrollOptions,
   type IShyelSettings,
+  type IWrappedScrollHandler,
+  onFrame,
   scrollClass,
   setIntersection,
   setLazyAttributes,
@@ -54,7 +58,24 @@ describe('exported signatures', () => {
   it('stickyel takes an element and a class name and hands back a teardown', () => {
     expectTypeOf(stickyel).parameter(0).toEqualTypeOf<HTMLElement | null>();
     expectTypeOf(stickyel).parameter(1).toEqualTypeOf<string | undefined>();
+    expectTypeOf(stickyel).parameter(2).toEqualTypeOf<IScrollOptions | undefined>();
     expectTypeOf(stickyel).returns.toEqualTypeOf<() => void>();
+  });
+
+  /**
+   * The wrapper is the caller's escape hatch from the default frame-coalescing.
+   * It has to accept a plain handler and hand back something callable, which is
+   * exactly the shape lodash's throttle and debounce already have.
+   */
+  it('every scroll helper accepts a handler wrapper', () => {
+    expectTypeOf(scrollClass).parameter(2).toEqualTypeOf<IScrollOptions | undefined>();
+    expectTypeOf<IScrollOptions['wrap']>().toEqualTypeOf<IScrollHandlerWrapper | undefined>();
+    expectTypeOf<IShyelSettings['wrap']>().toEqualTypeOf<IScrollHandlerWrapper | undefined>();
+  });
+
+  it('onFrame is itself a valid wrapper', () => {
+    expectTypeOf(onFrame).toEqualTypeOf<IScrollHandlerWrapper>();
+    expectTypeOf(onFrame).returns.toEqualTypeOf<IWrappedScrollHandler>();
   });
 
   /**
@@ -133,7 +154,12 @@ describe('exported settings interfaces', () => {
       intensity?: number;
       classShow?: string;
       classHide?: string;
+      wrap?: IScrollHandlerWrapper;
     }>();
+  });
+
+  it('IScrollOptions carries only the wrapper', () => {
+    expectTypeOf<IScrollOptions>().toEqualTypeOf<{ wrap?: IScrollHandlerWrapper }>();
   });
 
   it('IIntersectionSettings is entirely optional', () => {

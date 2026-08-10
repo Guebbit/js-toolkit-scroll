@@ -1,4 +1,4 @@
-import { throttle } from 'lodash';
+import { type IScrollHandlerWrapper, onFrame } from './onFrame';
 
 export interface IShyelSettings {
   // how much go back on top (auto = element calculated height)
@@ -10,6 +10,12 @@ export interface IShyelSettings {
   classShow?: string
   // class that applies when hide
   classHide?: string
+  /**
+   * Rate-limit strategy for the scroll handler.
+   * Defaults to one run per animation frame. Pass your own to choose different
+   * timings, for example lodash's throttle or debounce.
+   */
+  wrap?: IScrollHandlerWrapper
 }
 
 /**
@@ -31,16 +37,27 @@ export const shyel = (element: HTMLElement | null, threshold = 0, settings: IShy
     intensity = 0,
     classShow = 'shyel-show',
     classHide = 'shyel-hide',
+    wrap = onFrame,
   } = settings;
 
   // Get the window instance from the element's owner document (required for cypress tests)
   const $window = element.ownerDocument.defaultView ?? globalThis;
   // determine height if not specified (should never be specified)
-  const hideTop = elementHeight === 'auto' ? element.offsetHeight + 1 : elementHeight as number;
+  let hideTop = 0;
   // record last scroll position, to determine the direction of the next, and to check intensity
   let lastScrollY = 0;
 
-  const handleScroll = throttle(function () :void {
+  const measure = () => {
+    hideTop = elementHeight === 'auto' ? element.offsetHeight + 1 : elementHeight as number;
+    // A hidden header is already sitting at the old offset. Leaving it there
+    // after the height changes shows a strip of it, or hides too much.
+    if (hideTop != 0 && element.classList.contains(classHide))
+      element.style.top = -hideTop + 'px';
+  };
+
+  measure();
+
+  const update = () :void => {
     // scroll of window
     const scrollY = $window.scrollY;
 
@@ -75,9 +92,7 @@ export const shyel = (element: HTMLElement | null, threshold = 0, settings: IShy
     } else {
       // Towards Top
       // remove shy mode: when scrolling top, header need to reappear, and apply class (if any)
-      // Equivalent-mutant note: dropping this guard changes nothing here,
-      // because clearing an already-empty top is a no-op. It earns its place
-      // only on the hide branch, where elementHeight 0 must not write an offset.
+      // Equivalent-mutant note: as above, clearing an already-empty top is a no-op.
       if (hideTop != 0)
         element.style.top = '';
       element.classList.remove(classHide);
@@ -86,12 +101,24 @@ export const shyel = (element: HTMLElement | null, threshold = 0, settings: IShy
 
     // save last scroll
     lastScrollY = scrollY;
-  }, 20);
+  };
 
-  // add the event...
+  const handleScroll = wrap(update);
+  // A header that shrinks on scroll, or a viewport that rotates, changes how
+  // far the element has to travel. Measuring only once leaves it hiding by the
+  // wrong amount for the rest of the page's life.
+  const handleResize = wrap(measure);
+
+  // add the events...
   $window.addEventListener('scroll', handleScroll);
-  // ... and remove it later calling the returned function
+  $window.addEventListener('resize', handleResize);
+  // ... and remove them later calling the returned function
   return () => {
     $window.removeEventListener('scroll', handleScroll);
+    $window.removeEventListener('resize', handleResize);
+    // A run queued but not yet made would otherwise still touch an element the
+    // caller has already finished with.
+    handleScroll.cancel?.();
+    handleResize.cancel?.();
   };
 };

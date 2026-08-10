@@ -8,8 +8,9 @@ wrappers, and lazyloading for `<img>`, `<picture>` and `<video>`.
 npm install @guebbit/js-toolkit-scroll
 ```
 
-Ships CommonJS with TypeScript declarations. Named ESM imports work through
-Node's interop, so both of these are fine:
+No runtime dependencies beyond `@guebbit/js-toolkit`. Ships CommonJS with
+TypeScript declarations; named ESM imports work through Node's interop, so both
+of these are fine:
 
 ```js
 import { stickyel } from '@guebbit/js-toolkit-scroll';
@@ -26,11 +27,64 @@ const detach = stickyel(document.querySelector('header'));
 detach();
 ```
 
+Teardown also drops any work already queued for the next frame, so nothing
+touches the element after you have finished with it.
+
+## Rate limiting
+
+Scroll events arrive far faster than the screen updates. By default every scroll
+handler here is coalesced to **one run per animation frame** — immediately before
+the paint that shows the result, so the browser never recalculates layout it had
+already settled. Fire a hundred scroll events in one frame and the handler runs
+once.
+
+That default needs no configuration. If you want different timings, pass your
+own `wrap`. It receives the handler and returns a callable, which is the shape
+lodash's `throttle` and `debounce` already have:
+
+```js
+import { throttle, debounce } from 'lodash';
+
+// at most once every 100ms
+stickyel(header, 'pinned', { wrap: (handler) => throttle(handler, 100) });
+
+// only once movement stops
+scrollClass(header, instructions, { wrap: (handler) => debounce(handler, 150) });
+
+// every single scroll event, no rate limiting at all
+shyel(header, 300, { wrap: (handler) => handler });
+```
+
+`wrap` is accepted by `scrollClass`, `shyel` and `stickyel`. If what you return
+has a `cancel` method — lodash's wrappers do — teardown calls it; if it does not,
+teardown simply skips that step.
+
+lodash is used above only as the example everyone recognises. It is not a
+dependency of this package: bring your own, or write the three lines yourself.
+
+The default is exported as `onFrame` if you want to use it directly:
+
+```js
+import { onFrame } from '@guebbit/js-toolkit-scroll';
+
+const onScroll = onFrame(() => updateSomething());
+window.addEventListener('scroll', onScroll);
+// later
+window.removeEventListener('scroll', onScroll);
+onScroll.cancel();
+```
+
+**Which to choose.** The frame default suits anything that moves with the page —
+that is all three helpers here. Use `throttle` when the handler is genuinely
+expensive and you would rather it ran less often than every frame. Use `debounce`
+only for work that should happen once movement *stops*, never for something the
+user watches track the page.
+
 ---
 
 ## Headers
 
-### `stickyel(element, className?)`
+### `stickyel(element, className?, settings?)`
 
 Emulates and extends `position: sticky`. Once the page reaches where the element
 started, it is pinned to the top and given a class.
@@ -43,12 +97,16 @@ const detach = stickyel(document.querySelector('#header'), 'is-pinned');
 | --- | --- | --- |
 | `element` | — | `HTMLElement \| null`. A null element is a no-op. |
 | `className` | `'stickyel-active'` | Added while pinned. |
+| `settings.wrap` | one run per frame | See [Rate limiting](#rate-limiting). |
 
 Returns `() => void`.
 
-The resting position is measured once, from the page rather than the viewport,
-so constructing it on an already-scrolled page still works. While pinned the
-element carries inline `position: fixed; top: 0`; both are removed on release.
+The resting position is measured from the page rather than the viewport, so
+constructing it on an already-scrolled page works. It is re-measured whenever the
+window resizes, since anything that reflows the page — a rotated phone, a
+collapsed banner, a webfont arriving — moves where the element rests. While
+pinned the element carries inline `position: fixed; top: 0`; both are removed on
+release.
 
 ### `shyel(element, threshold?, settings?)`
 
@@ -69,6 +127,11 @@ const detach = shyel(document.querySelector('#header'), 300, {
 | `intensity` | `0` | Minimum pixels of movement before it reacts. Guards against a jittery trackpad flipping the header every frame. |
 | `classShow` | `'shyel-show'` | Added while visible. |
 | `classHide` | `'shyel-hide'` | Added while hidden. |
+| `wrap` | one run per frame | See [Rate limiting](#rate-limiting). |
+
+With `elementHeight: 'auto'` the height is re-measured on resize, so a header
+that shrinks as you scroll still hides by exactly its own height. An explicit
+number is your value and is never overwritten.
 
 `threshold` (default `0`) is the scroll position below which the header is
 always shown. The first 10px of the page are ignored outright: that is where
@@ -80,7 +143,7 @@ momentum scrolling and mobile browser chrome produce phantom movement.
 
 ## Scroll thresholds
 
-### `scrollClass(elements, instructions)`
+### `scrollClass(elements, instructions, settings?)`
 
 Adds or removes classes as the page passes given scroll positions.
 
@@ -100,6 +163,8 @@ const detach = scrollClass(document.querySelector('#header'), [
 | `class` | required | The class to toggle. |
 | `scroll` | `0` | The threshold, in pixels. Passing it means **strictly greater than**. |
 | `remove` | `false` | Invert: the class is present *below* the threshold and stripped above it. |
+
+A third argument takes `{ wrap }` — see [Rate limiting](#rate-limiting).
 
 The result depends only on where the page is now, never on how it got there, so
 a fast scroll cannot leave a class latched on.
@@ -160,6 +225,66 @@ An element carrying `mobileOnlyClass` is only touched under
 `(max-width: 600px)`, so a desktop layout is not left mid-animation by an effect
 designed for a narrow viewport. On a wide viewport such an element keeps being
 observed, because the viewport can still change.
+
+### Expensive callbacks
+
+The callbacks fire as the browser delivers them — they are not rate-limited, and
+they must not be, because each one carries entries no later call repeats. Wrap
+`intersectingCallback` in `debounce` and the elements reported in the dropped
+calls are never loaded at all.
+
+Rate-limit the **work** instead. Collect the elements as they arrive, then let
+lodash schedule one pass over them:
+
+```js
+import { debounce } from 'lodash';
+import { setIntersection } from '@guebbit/js-toolkit-scroll';
+
+const pending = new Set();
+
+// Takes no arguments and reads the Set when it runs, so debouncing it loses nothing.
+const drain = debounce(() => {
+  for (const element of pending) expensiveThing(element);
+  pending.clear();
+}, 100, { maxWait: 500 });
+
+setIntersection(document.querySelectorAll('.heavy'), {
+  intersectingCallback: (element) => {
+    pending.add(element);
+    drain();
+  },
+  notIntersectingCallback: (element) => pending.delete(element),
+});
+```
+
+Why this is cheaper than debouncing the callback itself:
+
+- **The Set deduplicates.** An element that enters, leaves and re-enters within
+  one window costs one job, not three.
+- **`delete` drops what stopped mattering.** Anything scrolled past before the
+  drain runs is never processed. Debouncing the callback also skipped work, but
+  it skipped whichever elements happened to arrive first.
+- **Nothing is silently lost.** Every element is either handled or deliberately
+  discarded.
+
+`maxWait` matters: during a continuous scroll a plain `debounce` keeps deferring
+and never runs. Use `throttle` instead if you would rather it run at a steady
+rate throughout.
+
+This is the same rule the library follows internally — `scrollClass`, `shyel`
+and `stickyel` throttle handlers that take no arguments and re-read
+`window.scrollY`, so a dropped call costs nothing.
+
+Two more savings worth having:
+
+- `single: true` stops an element being observed once its work is done, so the
+  watched set only ever shrinks. Best win for anything one-shot.
+- To cap parallel work, collect into an array and start a fixed number at a
+  time rather than draining the whole batch.
+
+**When debouncing the callback is fine:** if you are not processing the elements
+but recomputing something from them — a scrollspy, a visible count. Update the
+Set on every callback and debounce only the recompute.
 
 ---
 

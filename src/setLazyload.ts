@@ -57,9 +57,9 @@ export const applyLazyVideo = function(video: HTMLVideoElement, loadedClass = 'l
  */
 export const applyLazyPicture = function(image: HTMLPictureElement, loadedClass = 'loaded', prefix = 'data-'): boolean {
   setLazyAttributes(image, prefix);
-  // A <picture> never loads anything itself and the load event of its inner
-  // <img> does not bubble, so the listener has to sit on the <img>. The class
-  // still lands on the <picture>, which is the element the caller holds.
+  // A <picture> loads nothing itself and its inner <img>'s load event does not
+  // bubble, so the listener sits on the <img> while the class lands on the
+  // <picture>, which is what the caller holds.
   const fallbackImages = image.querySelectorAll('img');
   for (let i = fallbackImages.length; i--;)
     fallbackImages[i].addEventListener('load', function() {

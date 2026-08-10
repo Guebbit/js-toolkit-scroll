@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.2.0 - 2026-08-10
+
+### Fixed
+
+- `stickyel` and `shyel` measured once and never again. Anything that reflows the
+  page — a rotated phone, a collapsed banner, a webfont arriving, a header that
+  shrinks as you scroll — left the element pinning at a position that no longer
+  existed, or hiding by the wrong amount. Both now re-measure on resize.
+- Teardown removed the scroll listener but left any run already queued, so a
+  handler could still touch an element the caller had finished with. Teardown now
+  cancels the pending run as well.
+
+### Changed
+
+- Scroll handlers are coalesced to one run per animation frame instead of on a
+  20ms/50ms timer. The work now lands immediately before the paint that shows it,
+  rather than at an arbitrary point in the frame where the browser has to redo
+  layout it had already settled.
+- **Removed the lodash dependency.** It was pulled in as CommonJS, so bundlers
+  could not tree-shake it and consumers shipped roughly 72KB minified for two
+  functions. The package now has no third-party runtime dependencies.
+
+### Added
+
+- `wrap` on `scrollClass`, `shyel` and `stickyel`, for callers who want their own
+  rate-limiting instead of the per-frame default — lodash's `throttle` and
+  `debounce` already have the right shape. If the returned handler has a `cancel`
+  method, teardown calls it.
+- `onFrame`, the default wrapper, exported for direct use, with the
+  `IScrollOptions`, `IScrollHandlerWrapper` and `IWrappedScrollHandler` types.
+
 ## 1.1.0 - 2026-08-10
 
 ### Fixed

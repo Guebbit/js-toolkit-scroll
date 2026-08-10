@@ -67,9 +67,8 @@ describe('applyLazyImage', () => {
   });
 
   /**
-   * An image with no placeholder is already loading on its own. Claiming it and
-   * marking it later would let a plain <img> pick up the loaded class from a
-   * lazyload pass that did nothing.
+   * An image with no placeholder is already loading on its own; claiming it
+   * would let a plain <img> pick up the class from a pass that did nothing.
    */
   it('declines an image that has no placeholder', () => {
     const image = mount<HTMLImageElement>('<img src="a.jpg" />');

@@ -1,4 +1,11 @@
 export {
+  onFrame,
+  type IScrollOptions,
+  type IScrollHandlerWrapper,
+  type IWrappedScrollHandler
+} from "./onFrame";
+
+export {
   scrollClass,
   type IScrollClassSettings
 } from "./scrollClass";

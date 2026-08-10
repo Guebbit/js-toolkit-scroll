@@ -2,13 +2,11 @@ import { beforeEach } from 'vitest';
 
 /**
  * jsdom implements neither `matchMedia` nor `HTMLMediaElement.load`, and the
- * library calls both unguarded. Without these two defaults every lazy-video
- * test dies on "Not implemented" before it can assert anything, so the default
- * lives here and individual suites override it when the answer matters.
+ * library calls both unguarded, so every lazy-video test would die on "Not
+ * implemented". Suites override these defaults when the answer matters.
  *
- * The assignment is unconditional: unstubbing a suite's own matchMedia leaves
- * the key in place holding undefined, so a presence check would decline to
- * restore the default and the next suite would call undefined.
+ * The assignment is unconditional: unstubbing leaves the key in place holding
+ * undefined, so a presence check would skip the restore.
  */
 beforeEach(() => {
   Object.defineProperty(globalThis, 'matchMedia', {

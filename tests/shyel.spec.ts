@@ -219,6 +219,129 @@ describe('shyel', () => {
     expect(element.classList.contains('shyel-hide')).toBe(true);
   });
 
+  /**
+   * A header that shrinks on scroll, or a viewport that rotates, changes how far
+   * the element has to travel. Measuring only once leaves it hiding by the wrong
+   * amount for the rest of the page's life.
+   */
+  it('re-measures its travel when the element changes height', () => {
+    const element = header(60);
+    shyel(element, 100);
+
+    scrollAndSettle(400);
+    expect(element.style.top).toBe('-61px');
+
+    setOffsetHeight(element, 100);
+    globalThis.window.dispatchEvent(new Event('resize'));
+    vi.advanceTimersByTime(50);
+
+    expect(element.style.top).toBe('-101px');
+  });
+
+  it('uses the new travel for later hides too', () => {
+    const element = header(60);
+    shyel(element, 100);
+
+    setOffsetHeight(element, 200);
+    globalThis.window.dispatchEvent(new Event('resize'));
+    vi.advanceTimersByTime(50);
+
+    scrollAndSettle(400);
+
+    expect(element.style.top).toBe('-201px');
+  });
+
+  /**
+   * An explicit height is the caller's number, not a measurement, so a reflow
+   * must not overwrite it.
+   */
+  it('leaves an explicit elementHeight alone on reflow', () => {
+    const element = header(60);
+    shyel(element, 100, { elementHeight: 500 });
+
+    setOffsetHeight(element, 999);
+    globalThis.window.dispatchEvent(new Event('resize'));
+    vi.advanceTimersByTime(50);
+    scrollAndSettle(400);
+
+    expect(element.style.top).toBe('-500px');
+  });
+
+  /**
+   * Removing the listener is not enough: a run already queued for the next
+   * frame still touches an element the caller has finished with.
+   */
+  it('drops a queued run on teardown', () => {
+    const element = header();
+    const teardown = shyel(element, 100);
+
+    scrollTo(500);   // queues a run for the next frame
+    teardown();
+    vi.advanceTimersByTime(50);
+
+    expect(element.className).toBe('');
+  });
+
+  it('uses a caller-supplied wrapper instead of the default', () => {
+    const element = header();
+    shyel(element, 100, { wrap: (handler) => handler });
+
+    // an identity wrapper runs the handler on the event itself
+    scrollTo(500);
+
+    expect(element.classList.contains('shyel-hide')).toBe(true);
+  });
+
+  it('removes the resize listener on teardown', () => {
+    const element = header();
+    const count = listenerCounter(globalThis.window, 'resize');
+    const teardown = shyel(element, 100);
+
+    expect(count()).toBe(1);
+    teardown();
+    expect(count()).toBe(0);
+  });
+
+  it('tears down cleanly when the wrapper offers no cancel', () => {
+    const element = header();
+    const teardown = shyel(element, 100, { wrap: (handler) => handler });
+
+    expect(() => teardown()).not.toThrow();
+  });
+
+  /**
+   * Re-measuring must not start writing offsets the caller opted out of.
+   */
+  it('writes no offset on resize when elementHeight is 0', () => {
+    const element = header();
+    shyel(element, 100, { elementHeight: 0 });
+    scrollAndSettle(500);
+    expect(element.classList.contains('shyel-hide')).toBe(true);
+
+    globalThis.window.dispatchEvent(new Event('resize'));
+    vi.advanceTimersByTime(50);
+
+    expect(element.style.top).toBe('');
+  });
+
+  /**
+   * Only a hidden header is sitting at an offset. Re-applying one to a visible
+   * header on every reflow would push it off screen.
+   */
+  it('leaves a visible header alone on resize', () => {
+    const element = header(60);
+    shyel(element, 100);
+
+    scrollAndSettle(500);
+    scrollAndSettle(200);
+    expect(element.classList.contains('shyel-show')).toBe(true);
+
+    globalThis.window.dispatchEvent(new Event('resize'));
+    vi.advanceTimersByTime(50);
+
+    expect(element.style.top).toBe('');
+  });
+
   it('falls back to the global window for an element from a windowless document', () => {
     const foreign = document.implementation.createHTMLDocument();
     const element = foreign.createElement('header');

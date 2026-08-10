@@ -155,17 +155,116 @@ describe('stickyel', () => {
   });
 
   /**
-   * The element has to pin on the scroll event itself, not one throttle window
-   * later. A deferred first response shows up as the header visibly lagging
-   * behind the page before it snaps into place.
+   * The work happens on the frame boundary, immediately before the paint that
+   * shows it — not on a timer that can land mid-frame and force the browser to
+   * redo layout it had already settled.
    */
-  it('pins on the first scroll event, without waiting for the throttle window', () => {
+  it('pins on the next frame, not on a timer', () => {
     const element = elementAt(150);
     stickyel(element);
 
     scrollTo(200);
+    expect(element.classList.contains('stickyel-active')).toBe(false);
+
+    vi.advanceTimersToNextFrame();
+    expect(element.classList.contains('stickyel-active')).toBe(true);
+  });
+
+  /**
+   * Anything that reflows the page moves the resting position: a rotated
+   * phone, a banner that collapses, a webfont that finished loading. Measuring
+   * only once leaves the element pinning at a position that no longer exists.
+   */
+  it('re-measures its resting position when the page reflows', () => {
+    const element = elementAt(500);
+    stickyel(element);
+
+    setRectTop(element, 200);
+    globalThis.window.dispatchEvent(new Event('resize'));
+    vi.advanceTimersByTime(50);
+
+    scrollAndSettle(300);
 
     expect(element.classList.contains('stickyel-active')).toBe(true);
+  });
+
+  /**
+   * The measurement has to be taken while the element is in the document flow.
+   * Reading it while pinned returns the position it was moved to, not the one
+   * it came from, and the element would then never release.
+   */
+  it('re-measures correctly while already pinned', () => {
+    const element = elementAt(100);
+    stickyel(element);
+    scrollAndSettle(300);
+    expect(element.classList.contains('stickyel-active')).toBe(true);
+
+    // the element now rests far below the current scroll position
+    setRectTop(element, 900);
+    globalThis.window.dispatchEvent(new Event('resize'));
+    vi.advanceTimersByTime(50);
+
+    expect(element.classList.contains('stickyel-active')).toBe(false);
+    expect(element.style.position).toBe('');
+  });
+
+  /**
+   * Removing the listener is not enough on its own: a run already queued for
+   * the next frame still holds a reference to the element and would touch it
+   * after the caller has finished with it.
+   */
+  it('drops a queued run on teardown', () => {
+    const element = elementAt(150);
+    const teardown = stickyel(element);
+
+    scrollTo(300);   // queues a run for the next frame
+    teardown();
+    vi.advanceTimersByTime(50);
+
+    expect(element.classList.contains('stickyel-active')).toBe(false);
+    expect(element.style.position).toBe('');
+  });
+
+  /**
+   * The default is one run per frame, but the caller owns the trade-off between
+   * responsiveness and work done, so they can substitute their own strategy.
+   */
+  it('uses a caller-supplied wrapper instead of the default', () => {
+    const element = elementAt(150);
+    const calls: (() => void)[] = [];
+    stickyel(element, 'stickyel-active', { wrap: (handler) => { calls.push(handler); return handler; } });
+
+    // the wrapper here is the identity function, so the handler runs synchronously
+    scrollTo(200);
+
+    expect(calls.length).toBeGreaterThan(0);
+    expect(element.classList.contains('stickyel-active')).toBe(true);
+  });
+
+  /**
+   * The resize listener is a second subscription and leaks just as easily as the
+   * scroll one.
+   */
+  it('removes the resize listener on teardown', () => {
+    const element = elementAt(150);
+    const count = listenerCounter(globalThis.window, 'resize');
+    const teardown = stickyel(element);
+
+    expect(count()).toBe(1);
+    teardown();
+    expect(count()).toBe(0);
+  });
+
+  /**
+   * A wrapper only has to be callable. Requiring a `cancel` on it would rule out
+   * every plain function, including the identity wrapper that means "no rate
+   * limiting at all".
+   */
+  it('tears down cleanly when the wrapper offers no cancel', () => {
+    const element = elementAt(150);
+    const teardown = stickyel(element, 'stickyel-active', { wrap: (handler) => handler });
+
+    expect(() => teardown()).not.toThrow();
   });
 
   it('falls back to the global window for an element from a windowless document', () => {
