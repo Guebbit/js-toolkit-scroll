@@ -37,6 +37,10 @@ export const stickyel = (element :HTMLElement | null, className = 'stickyel-acti
       element.style.removeProperty('top');
       element.classList.remove(className);
     }
+    // Leading edge, so the element pins on the scroll event itself rather than
+    // a throttle window later. Equivalent-mutant note: this is also lodash's
+    // default, so dropping the option changes nothing and the surviving mutant
+    // on it is not worth chasing.
   }, 20, { leading: true });
 
   // add the event...

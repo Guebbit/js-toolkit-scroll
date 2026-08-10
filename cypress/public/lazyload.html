@@ -2,80 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Title</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lazyload</title>
   <style>
-    img, picture, video {
+    /*
+      Every asset is local and every box has a fixed size, so the specs can
+      scroll to a target and know exactly what is on screen. Remote assets made
+      the outcome depend on the network, and auto-sized media made it depend on
+      how fast the file decoded.
+    */
+    body {
+      margin: 0;
+    }
+    .spacer {
+      height: 1000px;
+    }
+    .media {
       display: block;
-      width: 500px;
-      height: 500px;
-      margin-bottom: 200px;
+      width: 300px;
+      height: 300px;
+      object-fit: cover;
+      background: #ddd;
+    }
+    /* Proves the loaded class arrives: the box only turns green once it does. */
+    .loaded {
+      outline: 4px solid green;
     }
   </style>
 </head>
 <body>
-<div id="image-list">
-  <img
-    src="https://loremflickr.com/100/100"
-    data-src="https://loremflickr.com/1000/1000"
-  />
 
-  <img
-    src="https://loremflickr.com/100/100"
-    data-src="https://loremflickr.com/1200/1200"
-  />
+<div class="spacer"></div>
 
-  <img
-    src="https://loremflickr.com/100/100"
-    data-src="https://loremflickr.com/1400/1400"
-  />
+<img id="image-plain" class="media" alt="" data-src="images/sally.jpg">
 
-  <img
-    src="https://loremflickr.com/100/100"
-    data-src="https://loremflickr.com/1600/1600"
-  />
-</div>
+<div class="spacer"></div>
 
-<picture>
-  <source
-    srcset="https://loremflickr.com/100/100"
-    data-srcset="https://loremflickr.com/600/600"
-    media="(min-width: 1200px)"
-  />
-  <source
-    srcset="https://loremflickr.com/100/100"
-    data-srcset="https://loremflickr.com/700/700"
-    media="(min-width: 601px)"
-  />
-  <source
-    srcset="https://loremflickr.com/100/100"
-    data-srcset="https://loremflickr.com/1000/1000"
-    media="(max-width: 600px)"
-  />
-  <img
-    src="https://loremflickr.com/100/100"
-    data-src="https://loremflickr.com/800/800"
-  />
+<img id="image-second" class="media" alt="" data-src="images/cosace.jpg">
+
+<div class="spacer"></div>
+
+<picture id="picture-block">
+  <source data-srcset="images/depth-1.png" media="(min-width: 1px)">
+  <img id="picture-fallback" class="media" alt="" data-src="images/depth-2.png">
 </picture>
 
-<video controls>
-  <source
-    data-src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm"
-    type="video/webm"
-  />
-  <source
-    data-src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
-    type="video/mp4"
-  />
-  Sorry, your browser doesn't support embedded videos.
+<div class="spacer"></div>
+
+<video id="video-sourced" class="media" muted playsinline>
+  <source id="video-source" data-src="media/clip.webm" type="video/webm">
 </video>
 
-<video controls data-src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">
-  Your browser does not support the video tag.
-</video>
+<div class="spacer"></div>
 
-<img
-  src="https://loremflickr.com/100/100"
-  data-src="https://loremflickr.com/1200/1200"
-/>
+<video id="video-direct" class="media" muted playsinline data-src="media/clip.mp4"></video>
+
+<div class="spacer"></div>
+
+<img id="image-forced" class="media lazyload-forced" alt="" data-src="images/depth-3.png">
+
+<div class="spacer"></div>
+
 </body>
 </html>

@@ -24,9 +24,17 @@ export interface IScrollClassSettings {
  * @param instructions - array of instructions
  */
 export const scrollClass = (element: HTMLElement | HTMLElement[] | NodeList | HTMLCollection | null, instructions: IScrollClassSettings[]): () => void => {
-  const elementsArray = formatNodeList(element);
-  // Get the window instance from the element's owner document (required for cypress tests)
+  // formatNodeList understands NodeList and arrays, but an HTMLCollection is
+  // neither, so it would wrap the collection itself as a single "element".
+  // The typeof guard keeps the call safe where there is no DOM at all, which is
+  // how a server-side render reaches this line.
+  const elementsArray = formatNodeList(
+    typeof HTMLCollection !== 'undefined' && element instanceof HTMLCollection
+      ? ([...element] as HTMLElement[])
+      : element
+  );
 
+  // Get the window instance from the element's owner document (required for cypress tests)
   if (elementsArray.length === 0)
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {};

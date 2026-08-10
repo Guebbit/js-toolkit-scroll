@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "testRunner": "vitest",
+  "vitest": {
+    "configFile": "vitest.config.mts"
+  },
+  "mutate": ["src/**/*.ts", "!src/index.ts"],
+  "coverageAnalysis": "perTest",
+  "concurrency": 2,
+  "reporters": ["progress", "clear-text", "json"],
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
+  },
+  "clearTextReporter": {
+    "maxTestsToLog": 0
+  },
+  "tempDirName": ".stryker-tmp"
+}

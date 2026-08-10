@@ -1,0 +1,25 @@
+{
+  "files": {
+    "src/scrollClass.ts": {
+      "score": 100,
+      "mutants": 41
+    },
+    "src/setIntersection.ts": {
+      "score": 97.3,
+      "mutants": 74
+    },
+    "src/setLazyload.ts": {
+      "score": 100,
+      "mutants": 92
+    },
+    "src/shyel.ts": {
+      "score": 96,
+      "mutants": 50
+    },
+    "src/stickyel.ts": {
+      "score": 97.06,
+      "mutants": 34
+    }
+  },
+  "//": "Per-file mutation score floors, written by scripts/mutationBaseline.mjs. A file may only ever be recorded higher; a drop fails the check instead."
+}

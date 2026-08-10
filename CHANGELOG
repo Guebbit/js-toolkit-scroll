@@ -1,1 +1,70 @@
-TODO
+# Changelog
+
+## 1.1.0 - 2026-08-10
+
+### Fixed
+
+- `types` pointed at `types/index.d.ts`, which the build never produces — it
+  emits declarations to `dist/types/`. Published versions up to 1.0.5 therefore
+  ship no usable types at all. The dead `types` entry in `files` and the
+  `rm -rf ./types` in the publish script are gone with it.
+- `prepublish` runs on `npm install`, not on publish, so a plain install of this
+  repo ran the full build, browser suite and docs build — and failed. Renamed to
+  `prepublishOnly`, with the checks themselves under `npm run verify`.
+- `scrollClass` threw a `TypeError` when given an `HTMLCollection`, which its own
+  signature accepts and which `getElementsByClassName` and `.children` return.
+- `setIntersection` debounced the IntersectionObserver callback by 10ms. Debounce
+  keeps only the last invocation, so any batch of entries delivered less than
+  10ms before another was silently discarded and those elements were never
+  reported. The debounce is removed; the observer already batches its own work.
+- `setIntersection` ignored `single: true` unless an `intersectingCallback` was
+  also supplied.
+- `applyLazyPicture` listened for `load` on the `<picture>` element. Only the
+  inner `<img>` loads and its `load` event does not bubble, so the loaded class
+  was never applied. The listener now sits on the `<img>`.
+- `activateIntersection`, `activateIntersectionOnce` and `activateLazyload` had
+  their parameter types inferred from their `querySelectorAll` defaults, which
+  rejected the plain arrays that every function they delegate to accepts.
+- `activateIntersectionOnce` never stopped observing. The class it applies is
+  never removed, so every revealed element stayed under observation for the life
+  of the document. It now unobserves an element once it has actually activated —
+  and only then, so a mobile-only element declined on a wide viewport can still
+  activate if the viewport narrows.
+- The placeholder prefix accepted by `setLazyAttributes` could not be reached
+  through `applyLazyImage`, `applyLazyPicture`, `applyLazyVideo`, `setLazyload`
+  or `activateLazyload`. All five now take it and pass it down.
+- `globals` was a runtime dependency; it is only used by the eslint config.
+- `license` was `AGPLv3.0`, which is not a valid SPDX identifier.
+
+### Added
+
+- Unit, property-based and type-level test suites on vitest + jsdom, covering
+  all twelve runtime exports and the three exported interfaces.
+- A packaging smoke test that packs the tarball, installs it into a clean
+  project and imports it as both ESM and CJS.
+- Mutation testing with per-file score floors in `mutation-baseline.json`.
+
+### Changed
+
+- The lazy helpers gained a trailing optional `prefix` argument and the three
+  `activate*` helpers accept arrays as well as NodeLists. Both are additive: no
+  existing call changes meaning.
+- `npm test` runs the unit suite; `npm run cy:test` runs the browser suite with
+  its fixture server.
+- The browser suite is reliable and no longer skips anything. Two specs were
+  asserting on impossible geometry: `Custom marginRoot` used a -400px margin on
+  a 660px viewport, which leaves no band at all, and both of its scroll
+  positions put a target edge exactly on the band boundary. The
+  `activateIntersectionOnce` spec expected a target that is only ever fully
+  visible part-way through an animated scroll. The viewport is now pinned in
+  `cypress.config.ts`, since the specs assert against real geometry.
+- The lazyload specs ran only in the interactive runner, so headless they
+  registered nothing and the spec was still counted as passing. They now run
+  everywhere, against local fixtures instead of remote hosts, one of which no
+  longer exists.
+- `npm run verify` is the single gate, wired to the pre-commit hook and to
+  `prepublishOnly`. The hook is activated by the `prepare` script, which the
+  repository declared through the long-removed husky v4 config block and so had
+  never run.
+- Removed `cy:kill`, a Windows-only `TASKKILL /IM node.exe /F` that killed every
+  node process on the machine. `cy:test` starts and stops its own server.

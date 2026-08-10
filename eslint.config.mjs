@@ -8,7 +8,20 @@ export default tseslint.config(
    * Excluded files
    */
   {
-    ignores: ['dist', 'node_modules', 'eslint.config.mjs', 'cypress', 'docs']
+    ignores: [
+      'dist',
+      'node_modules',
+      // Config files that sit outside the TypeScript program, so the
+      // type-aware rules have no types to run against.
+      'eslint.config.mjs',
+      'vitest.config.mts',
+      'cypress.config.ts',
+      '.commitlintrc.js',
+      'cypress',
+      'docs',
+      'reports',
+      '.stryker-tmp'
+    ]
   },
 
   /**
@@ -233,6 +246,53 @@ export default tseslint.config(
       globals: {
         ...globals.jest
       }
+    }
+  },
+
+  /**
+   * Node scripts.
+   *
+   * These are plain .mjs, so they are outside the TypeScript program and the
+   * type-aware rules have no types to reason about — they report every value as
+   * `any` rather than finding anything.
+   */
+  {
+    files: ['scripts/**/*.mjs'],
+    extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      'no-console': 'off'
+    }
+  },
+
+  /**
+   * Tests.
+   *
+   * Test code exercises the arguments the library has to survive, so the rules
+   * that steer production code away from them get in the way here:
+   *
+   * - no-null: passing null is the contract being tested.
+   * - prefer-dom-node-dataset: these tests assert on the raw attributes the
+   *   library moves, and .dataset would hide the very thing under test.
+   * - no-confusing-void-expression: the shorthand `() => expect(...)` body is
+   *   the standard form for a one-line assertion.
+   * - consistent-function-scoping: per-suite helpers belong beside their suite.
+   */
+  {
+    files: ['tests/**/*.ts'],
+    rules: {
+      'unicorn/no-null': 'off',
+      'unicorn/no-useless-undefined': 'off',
+      'unicorn/prefer-dom-node-dataset': 'off',
+      'unicorn/consistent-function-scoping': 'off',
+      'unicorn/no-array-callback-reference': 'off',
+      'unicorn/no-array-sort': 'off',
+      '@typescript-eslint/no-confusing-void-expression': 'off',
+      '@typescript-eslint/no-unnecessary-type-parameters': 'off'
     }
   }
 )

@@ -1,5 +1,3 @@
-import { debounce } from 'lodash';
-
 export interface IIntersectionSettings {
   /**
    * IntersectionObserver native
@@ -45,7 +43,6 @@ export const setIntersection = (elements: NodeListOf<Element> | Element[] | null
   if(!elements)
     return false;
 
-  let i: number;
   const {
       single = false,
       root = undefined,
@@ -58,18 +55,26 @@ export const setIntersection = (elements: NodeListOf<Element> | Element[] | null
 
   //FALLBACK in case IntersectionObserver doesn't exist
   if (!("IntersectionObserver" in globalThis)) {
-    for (i = elements.length; i--;)
+    for (let i = elements.length; i--;)
       if (intersectingCallback && elements[i])
         intersectingCallback(elements[i]);
     return false;
   }
 
   /**
-   * The observer that will be
+   * The observer that reports the elements entering and leaving the root.
+   *
+   * The callback runs as the browser delivers it. IntersectionObserver already
+   * coalesces its own work and hands over one batch per frame at most, so any
+   * extra debounce here would throw away whichever entries arrived first and
+   * leave those elements permanently unreported.
    */
   const observer: IntersectionObserver = new IntersectionObserver(
-    debounce((entries: IntersectionObserverEntry[], self: IntersectionObserver) => {
-      for (i = entries.length; i--;) {
+    (entries: IntersectionObserverEntry[], self: IntersectionObserver) => {
+      for (let i = entries.length; i--;) {
+        // Defensive only: the observer never hands over a hole or an entry
+        // without a target. Nothing observable changes if these guards go, so
+        // the surviving mutants on them are equivalent and not worth chasing.
         if (!entries[i])
           continue;
         const { target, isIntersecting } = entries[i];
@@ -78,8 +83,10 @@ export const setIntersection = (elements: NodeListOf<Element> | Element[] | null
           continue;
 
         if (isIntersecting) {
-          // if single time use: remove observer
-          if (intersectingCallback && single)
+          // single time use: stop watching this element.
+          // This describes the observation, not the callback, so it applies
+          // whether or not the caller wants to be told about the intersection.
+          if (single)
             self.unobserve(target);
           if(intersectingCallback)
             intersectingCallback(target);
@@ -89,14 +96,14 @@ export const setIntersection = (elements: NodeListOf<Element> | Element[] | null
             notIntersectingCallback(target);
         }
       }
-    }, 10), {
+    }, {
       root,
       rootMargin,
       threshold,
     });
 
   // add observer
-  for (i = elements.length; i--;)
+  for (let i = elements.length; i--;)
     if (elements[i])
       observer.observe(elements[i]);
 
@@ -110,24 +117,22 @@ export const setIntersection = (elements: NodeListOf<Element> | Element[] | null
  * @param mobileOnlyClass
  * @param threshold
  */
-export const activateIntersection = (elements = document.querySelectorAll('.observer-activate'), activeClass = 'active', mobileOnlyClass = 'observer-mobile-only', threshold = 1) =>
+export const activateIntersection = (elements: NodeListOf<Element> | Element[] = document.querySelectorAll('.observer-activate'), activeClass = 'active', mobileOnlyClass = 'observer-mobile-only', threshold = 1) =>
   setIntersection(elements, {
     threshold,
     intersectingCallback: function(entry) {
       // mobile only
       if (entry.classList.contains(mobileOnlyClass) && !globalThis.matchMedia("(max-width: 600px)").matches)
-        return false;
+        return;
       // intersect
       entry.classList.add(activeClass);
-      return true;
     },
     notIntersectingCallback: function(entry) {
       // mobile only
       if (entry.classList.contains(mobileOnlyClass) && !globalThis.matchMedia("(max-width: 600px)").matches)
-        return false;
+        return;
       // intersection end
       entry.classList.remove(activeClass);
-      return true;
     }
   });
 
@@ -138,13 +143,27 @@ export const activateIntersection = (elements = document.querySelectorAll('.obse
  * @param mobileOnlyClass
  * @param threshold
  */
-export const activateIntersectionOnce = (elements = document.querySelectorAll('.observer-activate-once'), activeClass = 'active', mobileOnlyClass = 'observer-mobile-only', threshold = 1) =>
-  setIntersection(elements, {
+export const activateIntersectionOnce = (elements: NodeListOf<Element> | Element[] = document.querySelectorAll('.observer-activate-once'), activeClass = 'active', mobileOnlyClass = 'observer-mobile-only', threshold = 1) => {
+  // Bound before the call, not by it: where IntersectionObserver is missing,
+  // setIntersection activates every element synchronously from inside its own
+  // call, so the callback below runs while this binding is still being
+  // assigned. There is no observer to detach from on that path, and false is
+  // exactly what setIntersection would have returned anyway.
+  let observer: IntersectionObserver | false = false;
+  observer = setIntersection(elements, {
     threshold,
     intersectingCallback: function(entry) {
+      // A mobile-only element on a wide viewport has not been activated, so it
+      // stays under observation: the viewport can still become narrow enough
+      // later. Handing `single: true` to setIntersection instead would drop it
+      // here and it could never activate.
       if (entry.classList.contains(mobileOnlyClass) && !globalThis.matchMedia("(max-width: 600px)").matches)
-        return false;
+        return;
       entry.classList.add(activeClass);
-      return true;
+      // The effect is applied and never undone, so there is nothing left to watch.
+      if (observer)
+        observer.unobserve(entry);
     },
   });
+  return observer;
+};

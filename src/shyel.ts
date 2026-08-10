@@ -50,6 +50,9 @@ export const shyel = (element: HTMLElement | null, threshold = 0, settings: IShy
 
     // if we are under scroll threshold, do not apply (and remove if any) shyness
     if (scrollY < threshold) {
+      // Equivalent-mutant note: dropping this guard changes nothing here,
+      // because clearing an already-empty top is a no-op. It earns its place
+      // only on the hide branch, where elementHeight 0 must not write an offset.
       if (hideTop != 0)
         element.style.top = '';
       element.classList.remove(classHide);
@@ -72,6 +75,9 @@ export const shyel = (element: HTMLElement | null, threshold = 0, settings: IShy
     } else {
       // Towards Top
       // remove shy mode: when scrolling top, header need to reappear, and apply class (if any)
+      // Equivalent-mutant note: dropping this guard changes nothing here,
+      // because clearing an already-empty top is a no-op. It earns its place
+      // only on the hide branch, where elementHeight 0 must not write an offset.
       if (hideTop != 0)
         element.style.top = '';
       element.classList.remove(classHide);
